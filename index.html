@@ -829,7 +829,7 @@ meetingTable(15.8, 0, 8.3, 2.4, 1.0, G.furn, 'furn');   // Meeting room 1
 G.furn.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 
 // ---------- Carl's knee scooter (front = local -z, so rotation.y matches the walk yaw) ----------
-const SC = { x: 11.85, z: 12.0, y: 0, yaw: 0, riding: false, roll: 0, note: 0, col: null };
+const SC = { x: 11.85, z: 12.0, y: 0, yaw: 0, riding: false, roll: 0, steer: 0, note: 0, col: null };
 const scooter = (() => {
   const g = new THREE.Group(); G.furn.add(g);
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -839,8 +839,10 @@ const scooter = (() => {
   const padM = std({ color: 0x27282c, roughness: 0.85 });
   const gripM = std({ color: 0x3b3e44, roughness: 0.8 });
   const WR = 0.1, FZ = -0.33, RZ = 0.37, wheels = [];
-  function wheel(x, z) {
-    const w = new THREE.Group(); w.position.set(x, WR, z); g.add(w);
+  // the steering assembly (column, T-bar, basket, front wheels) turns around the column
+  const steer = new THREE.Group(); steer.position.z = FZ; g.add(steer);
+  function wheel(x, z, parent) {
+    const w = new THREE.Group(); w.position.set(x, WR, z); parent.add(w);
     const tire = new THREE.Mesh(new THREE.TorusGeometry(WR - 0.024, 0.024, 10, 30), rubber); tire.rotation.y = Math.PI / 2; w.add(tire);
     const rim = new THREE.Mesh(new THREE.CylinderGeometry(WR - 0.03, WR - 0.03, 0.022, 24), rimM); rim.rotation.z = Math.PI / 2; w.add(rim);
     for (let k = 0; k < 5; k++) {   // five spokes, so the wheel visibly turns
@@ -850,21 +852,23 @@ const scooter = (() => {
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.03, 12), M.grey); cap.rotation.z = Math.PI / 2; w.add(cap);
     wheels.push(w);
   }
-  for (const x of [-0.22, 0.22]) wheel(x, FZ);
-  for (const x of [-0.19, 0.19]) wheel(x, RZ);
-  rod(V(-0.2, WR, FZ), V(0.2, WR, FZ), 0.013, frame, g);
+  for (const x of [-0.22, 0.22]) wheel(x, 0, steer);
+  for (const x of [-0.19, 0.19]) wheel(x, RZ, g);
+  rod(V(-0.2, WR, 0), V(0.2, WR, 0), 0.013, frame, steer);
   rod(V(-0.17, WR, RZ), V(0.17, WR, RZ), 0.013, frame, g);
   // steering column, T-bar, grips and brake levers
-  rod(V(0, WR, FZ), V(0, 0.93, FZ), 0.017, frame, g);
-  rod(V(0, 0.42, FZ), V(0, 0.47, FZ), 0.024, frame, g);          // folding clamp
-  rod(V(0.02, 0.74, FZ), V(0.06, 0.74, FZ), 0.018, frame, g);    // height knob
-  rod(V(-0.21, 0.93, FZ), V(0.21, 0.93, FZ), 0.012, frame, g);
+  rod(V(0, WR, 0), V(0, 0.93, 0), 0.017, frame, steer);
+  rod(V(0, 0.42, 0), V(0, 0.47, 0), 0.024, frame, steer);          // folding clamp
+  rod(V(0.02, 0.74, 0), V(0.06, 0.74, 0), 0.018, frame, steer);    // height knob
+  rod(V(-0.21, 0.93, 0), V(0.21, 0.93, 0), 0.012, frame, steer);
   for (const sx of [-1, 1]) {
-    const gp = cyl(0.019, 0.019, 0.11, gripM, sx * 0.165, 0.93, FZ, g, 12); gp.rotation.z = Math.PI / 2;
-    rod(V(sx * 0.1, 0.935, FZ - 0.015), V(sx * 0.17, 0.925, FZ - 0.07), 0.005, frame, g);
+    const gp = cyl(0.019, 0.019, 0.11, gripM, sx * 0.165, 0.93, 0, steer, 12); gp.rotation.z = Math.PI / 2;
+    rod(V(sx * 0.1, 0.935, -0.015), V(sx * 0.17, 0.925, -0.07), 0.005, frame, steer);
   }
-  const cable = new THREE.CatmullRomCurve3([V(0.12, 0.93, FZ - 0.02), V(0.1, 0.8, FZ - 0.08), V(0.04, 0.5, FZ - 0.06), V(0.02, 0.3, FZ + 0.05), V(0.02, 0.24, 0.3), V(0.15, WR + 0.04, RZ)]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(cable, 40, 0.004, 5), frame));
+  const cableTop = new THREE.CatmullRomCurve3([V(0.12, 0.93, -0.02), V(0.1, 0.8, -0.08), V(0.04, 0.5, -0.06), V(0.02, 0.3, 0)]);
+  steer.add(new THREE.Mesh(new THREE.TubeGeometry(cableTop, 30, 0.004, 5), frame));
+  const cable = new THREE.CatmullRomCurve3([V(0.02, 0.3, FZ), V(0.02, 0.28, FZ + 0.15), V(0.02, 0.24, 0.3), V(0.15, WR + 0.04, RZ)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(cable, 30, 0.004, 5), frame));
   // main frame tube, curving down to the rear axle
   const tube = new THREE.CatmullRomCurve3([V(0, 0.27, FZ), V(0, 0.27, 0.05), V(0, 0.26, 0.22), V(0, 0.2, 0.32), V(0, WR + 0.02, RZ)]);
   g.add(new THREE.Mesh(new THREE.TubeGeometry(tube, 24, 0.018, 8), frame));
@@ -886,11 +890,11 @@ const scooter = (() => {
   const meshM = std({ map: meshTex, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.4 });
   const hide = new THREE.MeshBasicMaterial({ visible: false });
   const basket = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.22, 0.2), [meshM, meshM, hide, meshM, meshM, meshM]);
-  basket.position.set(0, 0.63, FZ - 0.13); g.add(basket);
+  basket.position.set(0, 0.63, -0.13); steer.add(basket);
   for (const [w, d, x, z] of [[0.3, 0.012, 0, -0.1], [0.3, 0.012, 0, 0.1], [0.012, 0.2, -0.15, 0], [0.012, 0.2, 0.15, 0]])
-    box(w, 0.012, d, frame, x, 0.74, FZ - 0.13 + z, g);
+    box(w, 0.012, d, frame, x, 0.74, -0.13 + z, steer);
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
-  return { g, wheels };
+  return { g, wheels, steer };
 })();
 colSeg([0, 0], [0, 0], 0.5, 0, 1.0, 'scooter'); SC.col = COL[COL.length - 1];
 function placeScooter() {
@@ -1194,6 +1198,9 @@ function rideUpdate(dt) {
   if (keys.KeyA || keys.ArrowLeft) turn--;
   f = Math.max(-1, Math.min(1, f + stick.y)); turn = Math.max(-1, Math.min(1, turn + stick.x));
   yaw -= turn * 1.7 * dt;
+  // the handlebar follows the steering input, easing in and out (steer right = bar turns right)
+  SC.steer += (-turn * 0.45 - SC.steer) * Math.min(1, dt * 10);
+  scooter.steer.rotation.y = SC.steer;
   const run = keys.ShiftLeft || keys.ShiftRight;
   const sp = f * (run ? 2.8 : 1.8) * (f < 0 ? 0.5 : 1);
   const x0 = pl.x, z0 = pl.z;
