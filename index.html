@@ -167,8 +167,8 @@
 
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lb-cap">
   <figure>
-    <img id="lb-img" src="assets/fari-directors-2024-07.jpg" alt="Three people standing in front of a FARI banner reading AI for the Common Good Institute Brussels">
-    <figcaption id="lb-cap">FARI directors - July 2024</figcaption>
+    <img id="lb-img" alt="">
+    <figcaption id="lb-cap"></figcaption>
     <button class="lb-close" id="lb-close">Close</button>
   </figure>
 </div>
@@ -750,14 +750,22 @@ function screenStand(x, z, ry, parent, face = M.screen) {
   colBox(x, z, 1.35, 0.45, ry, 0, 2.0, 'furn');
   return scr;
 }
-// photo shown on the screen near the atrium; the image is cropped to fill the 16:9-ish screen
-const photoTex = new THREE.TextureLoader().load('assets/fari-directors-2024-07.jpg', t => {
-  const imgAspect = t.image.width / t.image.height, scrAspect = 1.35 / 0.78;
-  if (imgAspect < scrAspect) { t.repeat.set(1, imgAspect / scrAspect); t.offset.set(0, (1 - t.repeat.y) / 2); }
-  else { t.repeat.set(scrAspect / imgAspect, 1); t.offset.set((1 - t.repeat.x) / 2, 0); }
-});
-photoTex.colorSpace = THREE.SRGBColorSpace; photoTex.anisotropy = 8;
-M.photo = std({ color: 0xffffff, map: photoTex, emissive: 0xffffff, emissiveMap: photoTex, emissiveIntensity: 0.45, roughness: 0.4 });
+// photos shown on screens; each image is cropped to fill the screen, and opens with its caption on click
+const PHOTOS = [
+  { src: 'assets/fari-directors-2024-07.jpg', caption: 'FARI directors - July 2024',
+    alt: 'Three people standing in front of a FARI banner reading AI for the Common Good Institute Brussels', at: [8.3, 8.9, 0] },
+  { src: 'assets/royal-visit-2024-08.jpg', caption: 'Philippe, King of the Belgians, profoundly regretting his follow-up question. - August 2024',
+    alt: 'King Philippe listening to a FARI researcher in a room with dark blue walls', at: [15.3, 10.6, -1.13] },
+];
+function photoMaterial(src) {
+  const tex = new THREE.TextureLoader().load(src, t => {
+    const imgAspect = t.image.width / t.image.height, scrAspect = 1.35 / 0.78;
+    if (imgAspect < scrAspect) { t.repeat.set(1, imgAspect / scrAspect); t.offset.set(0, (1 - t.repeat.y) / 2); }
+    else { t.repeat.set(scrAspect / imgAspect, 1); t.offset.set((1 - t.repeat.x) / 2, 0); }
+  });
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  return std({ color: 0xffffff, map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.45, roughness: 0.4 });
+}
 function welcomeDesk(x, z, ry, parent) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
   box(2.6, 0.06, 1.0, [M.white, M.white, M.marble, M.white, M.white, M.white], 0, 0.95, 0, g);
@@ -812,7 +820,7 @@ welcomeDesk(...onFacade(5.0, 1.6), FACADE_ROT, G.furn);
 cityTable(...onFacade(15.8, 2.6), FACADE_ROT, G.furn);
 robotTable(15.4, 15.9, 0.2, G.furn);
 for (const [x, z, r] of [[12.7, 10.8, 0.4], [13.4, 11.2, -0.2], [3.5, 9.3, 0.6], [4.3, 8.7, 0.3]]) mannequin(x, z, r, G.furn);
-const photoScreen = screenStand(8.3, 8.9, 0, G.furn, M.photo);
+for (const ph of PHOTOS) ph.screen = screenStand(...ph.at, G.furn, photoMaterial(ph.src));
 screenStand(19.6, 15.0, -Math.PI / 2, G.furn);
 rollup(10.75, 10.95, 0, G.furn);
 meetingTable(15.8, 0, 8.3, 2.4, 1.0, G.furn, 'furn');   // Meeting room 1
@@ -845,6 +853,7 @@ const LABELS = [
   ['Robot arm', 15.4, 2.1, 15.9, 'furn'],
   ['Exoskeleton demos', 13.0, 2.25, 11.0, 'furn'],
   ['Photo · click to open', 8.3, 2.15, 8.95, 'furn'],
+  ['Photo · click to open', 15.3, 2.15, 10.6, 'furn'],
 ];
 const labelLayer = document.getElementById('labels');
 const labels = LABELS.map(([text, x, y, z, grp]) => {
@@ -973,8 +982,11 @@ const canvas = renderer.domElement;
 // ---------- clicking the photo screen opens the photo with its caption ----------
 const lightbox = document.getElementById('lightbox');
 let photoOpener = null;
-function openPhoto() {
+function openPhoto(ph) {
   photoOpener = document.activeElement;
+  const img = document.getElementById('lb-img');
+  img.src = ph.src; img.alt = ph.alt;
+  document.getElementById('lb-cap').textContent = ph.caption;
   for (const k in keys) keys[k] = false;
   lightbox.hidden = false;
   document.getElementById('lb-close').focus();
@@ -988,20 +1000,20 @@ lightbox.addEventListener('click', e => { if (e.target === lightbox) closePhoto(
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+// returns the photo whose screen is under the pointer, unless something solid is in front of it
 function photoHit(clientX, clientY) {
-  if (!G.furn.visible) return false;
+  if (!G.furn.visible) return null;
   const r = canvas.getBoundingClientRect();
   ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
-  if (!ray.intersectObject(photoScreen, false).length) return false;
-  // make sure nothing solid stands between the camera and the screen
+  if (!PHOTOS.some(ph => ray.intersectObject(ph.screen, false).length)) return null;
   for (const h of ray.intersectObject(root, true)) {
     if (!h.object.isMesh || !shown(h.object)) continue;
     const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
     if (mats.every(m => m.transparent)) continue;
-    return h.object === photoScreen;
+    return PHOTOS.find(ph => ph.screen === h.object) || null;
   }
-  return false;
+  return null;
 }
 let press = null;
 canvas.addEventListener('pointerdown', e => { press = { x: e.clientX, y: e.clientY, t: performance.now() }; });
@@ -1009,11 +1021,12 @@ canvas.addEventListener('pointerup', e => {
   if (!press) return;
   const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y), quick = performance.now() - press.t < 600;
   press = null;
-  if (moved < 6 && quick && photoHit(e.clientX, e.clientY)) openPhoto();
+  const ph = moved < 6 && quick ? photoHit(e.clientX, e.clientY) : null;
+  if (ph) openPhoto(ph);
 });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || e.buttons) return;
-  canvas.classList.toggle('over-photo', photoHit(e.clientX, e.clientY));
+  canvas.classList.toggle('over-photo', !!photoHit(e.clientX, e.clientY));
 });
 let look = null;
 canvas.addEventListener('pointerdown', e => {
