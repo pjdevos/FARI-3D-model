@@ -162,6 +162,8 @@
   <span class="lvl" id="lvl">Ground floor</span>
   <span class="hint" id="hint-keys">Drag to look · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> or arrows to walk · <kbd>Shift</kbd> to run · <kbd>Esc</kbd> to leave</span>
   <span class="hint" id="hint-touch" hidden>Drag to look · use the stick to walk</span>
+  <span class="hint" id="hint-ride-keys" hidden><kbd>W</kbd>/<kbd>Z</kbd> and <kbd>S</kbd> to ride · <kbd>A</kbd>/<kbd>Q</kbd> and <kbd>D</kbd> to steer · <kbd>E</kbd> or click the scooter to get off</span>
+  <span class="hint" id="hint-ride-touch" hidden>Use the stick to ride and steer · tap the scooter to get off</span>
 </div>
 <div class="stick" id="stick" hidden aria-hidden="true"><div class="knob" id="knob"></div></div>
 
@@ -826,6 +828,78 @@ rollup(10.75, 10.95, 0, G.furn);
 meetingTable(15.8, 0, 8.3, 2.4, 1.0, G.furn, 'furn');   // Meeting room 1
 G.furn.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 
+// ---------- Carl's knee scooter (front = local -z, so rotation.y matches the walk yaw) ----------
+const SC = { x: 11.85, z: 12.0, y: 0, yaw: 0, riding: false, roll: 0, note: 0, col: null };
+const scooter = (() => {
+  const g = new THREE.Group(); G.furn.add(g);
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const frame = std({ color: 0x1a1b1e, metalness: 0.6, roughness: 0.35 });
+  const rubber = std({ color: 0x1c1d20, roughness: 0.92 });
+  const rimM = std({ color: 0x232428, roughness: 0.55 });
+  const padM = std({ color: 0x27282c, roughness: 0.85 });
+  const gripM = std({ color: 0x3b3e44, roughness: 0.8 });
+  const WR = 0.1, FZ = -0.33, RZ = 0.37, wheels = [];
+  function wheel(x, z) {
+    const w = new THREE.Group(); w.position.set(x, WR, z); g.add(w);
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(WR - 0.024, 0.024, 10, 30), rubber); tire.rotation.y = Math.PI / 2; w.add(tire);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(WR - 0.03, WR - 0.03, 0.022, 24), rimM); rim.rotation.z = Math.PI / 2; w.add(rim);
+    for (let k = 0; k < 5; k++) {   // five spokes, so the wheel visibly turns
+      const sp = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.016, WR - 0.03), frame);
+      const a = k * Math.PI * 2 / 5; sp.position.set(0, Math.sin(a) * (WR - 0.03) / 2, Math.cos(a) * (WR - 0.03) / 2); sp.rotation.x = -a; w.add(sp);
+    }
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.03, 12), M.grey); cap.rotation.z = Math.PI / 2; w.add(cap);
+    wheels.push(w);
+  }
+  for (const x of [-0.22, 0.22]) wheel(x, FZ);
+  for (const x of [-0.19, 0.19]) wheel(x, RZ);
+  rod(V(-0.2, WR, FZ), V(0.2, WR, FZ), 0.013, frame, g);
+  rod(V(-0.17, WR, RZ), V(0.17, WR, RZ), 0.013, frame, g);
+  // steering column, T-bar, grips and brake levers
+  rod(V(0, WR, FZ), V(0, 0.93, FZ), 0.017, frame, g);
+  rod(V(0, 0.42, FZ), V(0, 0.47, FZ), 0.024, frame, g);          // folding clamp
+  rod(V(0.02, 0.74, FZ), V(0.06, 0.74, FZ), 0.018, frame, g);    // height knob
+  rod(V(-0.21, 0.93, FZ), V(0.21, 0.93, FZ), 0.012, frame, g);
+  for (const sx of [-1, 1]) {
+    const gp = cyl(0.019, 0.019, 0.11, gripM, sx * 0.165, 0.93, FZ, g, 12); gp.rotation.z = Math.PI / 2;
+    rod(V(sx * 0.1, 0.935, FZ - 0.015), V(sx * 0.17, 0.925, FZ - 0.07), 0.005, frame, g);
+  }
+  const cable = new THREE.CatmullRomCurve3([V(0.12, 0.93, FZ - 0.02), V(0.1, 0.8, FZ - 0.08), V(0.04, 0.5, FZ - 0.06), V(0.02, 0.3, FZ + 0.05), V(0.02, 0.24, 0.3), V(0.15, WR + 0.04, RZ)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(cable, 40, 0.004, 5), frame));
+  // main frame tube, curving down to the rear axle
+  const tube = new THREE.CatmullRomCurve3([V(0, 0.27, FZ), V(0, 0.27, 0.05), V(0, 0.26, 0.22), V(0, 0.2, 0.32), V(0, WR + 0.02, RZ)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(tube, 24, 0.018, 8), frame));
+  rod(V(0, 0.27, -0.05), V(0, 0.36, -0.05), 0.012, frame, g);    // quick-release lever block
+  // knee pad on an adjustable post
+  box(0.036, 0.24, 0.036, frame, 0, 0.37, 0.12, g);
+  const prof = new THREE.Shape();
+  prof.moveTo(-0.2, 0); prof.lineTo(0.2, 0); prof.lineTo(0.2, 0.05);
+  prof.quadraticCurveTo(0.19, 0.075, 0.13, 0.072); prof.quadraticCurveTo(0.02, 0.04, -0.08, 0.06);
+  prof.quadraticCurveTo(-0.18, 0.08, -0.2, 0.055); prof.closePath();
+  const padGeo = new THREE.ExtrudeGeometry(prof, { depth: 0.17, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 3, curveSegments: 16 });
+  padGeo.translate(0, 0, -0.085);
+  const pad = new THREE.Mesh(padGeo, padM); pad.rotation.y = Math.PI / 2; pad.position.set(0, 0.48, 0.12); g.add(pad);
+  // wire basket on the front of the column, open at the top
+  const meshTex = canvasTex(128, 128, (c, w, h) => {
+    c.clearRect(0, 0, w, h); c.strokeStyle = 'rgba(20,21,24,0.95)'; c.lineWidth = 3;
+    for (let i = -h; i < w + h; i += 16) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + h, h); c.stroke(); c.beginPath(); c.moveTo(i, h); c.lineTo(i + h, 0); c.stroke(); }
+  }, [3, 2]);
+  const meshM = std({ map: meshTex, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.4 });
+  const hide = new THREE.MeshBasicMaterial({ visible: false });
+  const basket = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.22, 0.2), [meshM, meshM, hide, meshM, meshM, meshM]);
+  basket.position.set(0, 0.63, FZ - 0.13); g.add(basket);
+  for (const [w, d, x, z] of [[0.3, 0.012, 0, -0.1], [0.3, 0.012, 0, 0.1], [0.012, 0.2, -0.15, 0], [0.012, 0.2, 0.15, 0]])
+    box(w, 0.012, d, frame, x, 0.74, FZ - 0.13 + z, g);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return { g, wheels };
+})();
+colSeg([0, 0], [0, 0], 0.5, 0, 1.0, 'scooter'); SC.col = COL[COL.length - 1];
+function placeScooter() {
+  scooter.g.position.set(SC.x, SC.y, SC.z); scooter.g.rotation.y = SC.yaw;
+  const fx = -Math.sin(SC.yaw) * 0.28, fz = -Math.cos(SC.yaw) * 0.28;
+  Object.assign(SC.col, { ax: SC.x - fx, az: SC.z - fz, bx: SC.x + fx, bz: SC.z + fz, y0: SC.y, y1: SC.y + 1.0 });
+}
+placeScooter();
+
 // ---------- environment & lights ----------
 const ground = new THREE.Mesh(new THREE.CircleGeometry(70, 64), new THREE.MeshStandardMaterial({ color: 0xd3dae4, roughness: 1 }));
 ground.rotation.x = -Math.PI / 2; ground.position.y = -0.03; ground.receiveShadow = true; scene.add(ground);
@@ -854,6 +928,7 @@ const LABELS = [
   ['Exoskeleton demos', 13.0, 2.25, 11.0, 'furn'],
   ['Photo · click to open', 8.3, 2.15, 8.95, 'furn'],
   ['Photo · click to open', 15.3, 2.15, 10.6, 'furn'],
+  ["Carl's knee scooter · click to ride", SC.x, 1.25, SC.z, 'furn'],
 ];
 const labelLayer = document.getElementById('labels');
 const labels = LABELS.map(([text, x, y, z, grp]) => {
@@ -905,7 +980,9 @@ if (narrow()) setCollapsed(true);
 
 // ---------- walk mode ----------
 const R = 0.25, EYE = 1.6, HEAD = 1.75, KNEE = 0.35, STEP_UP = 0.45;
-const active = grp => grp === 'core' || state[grp];
+const active = grp => grp === 'core' || (grp === 'scooter' ? state.furn && !SC.riding : state[grp]);
+const bodyR = () => SC.riding ? 0.38 : R;
+const stepUp = () => SC.riding ? 0.04 : STEP_UP;   // a knee scooter cannot climb a step
 const pl = { x: 0, z: 0, feet: 0, vy: 0 };
 let walking = false, yaw = 0, pitch = 0;
 
@@ -913,7 +990,7 @@ function probe(x, z, feet) {
   let floor = 0, blocked = false;
   for (const s of SURF) {
     if (!active(s.grp) || !s.test(x, z)) continue;
-    if (s.top <= feet + STEP_UP) floor = Math.max(floor, s.top);
+    if (s.top <= feet + stepUp()) floor = Math.max(floor, s.top);
     else if (s.bottom < feet + HEAD) blocked = true;
   }
   return { floor, blocked };
@@ -927,7 +1004,7 @@ function pushOut(x, z, feet) {
       t = Math.max(0, Math.min(1, t));
       const px = c.ax + dx * t, pz = c.az + dz * t;
       let ox = x - px, oz = z - pz;
-      const d = Math.hypot(ox, oz), min = c.r + R;
+      const d = Math.hypot(ox, oz), min = c.r + bodyR();
       if (d >= min) continue;
       if (d < 1e-6) { ox = -dz; oz = dx; const l = Math.hypot(ox, oz) || 1; ox /= l; oz /= l; if (!L2) { ox = 1; oz = 0; } }
       else { ox /= d; oz /= d; }
@@ -936,12 +1013,16 @@ function pushOut(x, z, feet) {
   }
   return [x, z];
 }
+// returns true when a step or other raised surface was in the way of the move (sliding along it still happens)
 function tryMove(dx, dz) {
+  let stopped = false;
   for (const [mx, mz] of [[dx, dz], [dx, 0], [0, dz]]) {
     if (!mx && !mz) continue;
     const [nx, nz] = pushOut(pl.x + mx, pl.z + mz, pl.feet);
-    if (!probe(nx, nz, pl.feet).blocked) { pl.x = nx; pl.z = nz; return; }
+    if (!probe(nx, nz, pl.feet).blocked) { pl.x = nx; pl.z = nz; return stopped; }
+    stopped = true;
   }
+  return stopped;
 }
 
 const SPOT_DEF = {
@@ -953,6 +1034,7 @@ const SPOT_DEF = {
   office: { at: [16.2, 9.0], look: [14.0, 9.3], feet: Y_MEZZ, pitch: -0.05 },
 };
 function jump(name) {
+  dismountScooter();
   const s = SPOT_DEF[name];
   if (s.feet > 1 && !state.mezz) { state.mezz = true; document.getElementById('t-mezz').checked = true; }
   pl.x = s.at[0]; pl.z = s.at[1]; pl.feet = s.feet; pl.vy = 0;
@@ -971,6 +1053,11 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape' && !lightbox.hidden) { closePhoto(); return; }
   if (!walking || !lightbox.hidden) return;
   if (e.code === 'Escape') { setMode('orbit'); return; }
+  if (e.code === 'KeyE') {
+    if (SC.riding) dismountScooter();
+    else if (Math.hypot(pl.x - SC.x, pl.z - SC.z) < 2 && Math.abs(pl.feet - SC.y) < 0.5) mountScooter();
+    return;
+  }
   if (MOVE_KEYS.includes(e.code)) { keys[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault(); }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
@@ -1000,18 +1087,24 @@ lightbox.addEventListener('click', e => { if (e.target === lightbox) closePhoto(
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
-// returns the photo whose screen is under the pointer, unless something solid is in front of it
-function photoHit(clientX, clientY) {
+// what can be clicked: a photo screen (opens the photo) or the knee scooter (get on or off).
+// Returns null when nothing clickable is under the pointer or something solid is in front of it.
+const inScooter = o => { for (; o; o = o.parent) if (o === scooter.g) return true; return false; };
+function clickTarget(clientX, clientY) {
   if (!G.furn.visible) return null;
   const r = canvas.getBoundingClientRect();
   ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
-  if (!PHOTOS.some(ph => ray.intersectObject(ph.screen, false).length)) return null;
+  // cheap test first, so hovering does not raycast the whole building on every mouse move
+  if (!PHOTOS.some(ph => ray.intersectObject(ph.screen, false).length) && !ray.intersectObject(scooter.g, true).length) return null;
   for (const h of ray.intersectObject(root, true)) {
     if (!h.object.isMesh || !shown(h.object)) continue;
     const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
-    if (mats.every(m => m.transparent)) continue;
-    return PHOTOS.find(ph => ph.screen === h.object) || null;
+    if (mats.every(m => m.transparent || !m.visible)) continue;
+    const ph = PHOTOS.find(p => p.screen === h.object);
+    if (ph) return { photo: ph };
+    if (inScooter(h.object)) return { scooter: true };
+    return null;
   }
   return null;
 }
@@ -1021,12 +1114,15 @@ canvas.addEventListener('pointerup', e => {
   if (!press) return;
   const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y), quick = performance.now() - press.t < 600;
   press = null;
-  const ph = moved < 6 && quick ? photoHit(e.clientX, e.clientY) : null;
-  if (ph) openPhoto(ph);
+  const hit = moved < 6 && quick ? clickTarget(e.clientX, e.clientY) : null;
+  if (!hit) return;
+  if (hit.photo) openPhoto(hit.photo);
+  else if (SC.riding) dismountScooter();
+  else mountScooter();
 });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || e.buttons) return;
-  canvas.classList.toggle('over-photo', !!photoHit(e.clientX, e.clientY));
+  canvas.classList.toggle('over-photo', !!clickTarget(e.clientX, e.clientY));
 });
 let look = null;
 canvas.addEventListener('pointerdown', e => {
@@ -1062,10 +1158,54 @@ stickEl.addEventListener('pointercancel', stickEnd);
 
 const hud = document.getElementById('hud'), lvl = document.getElementById('lvl');
 const coarse = matchMedia('(pointer: coarse)').matches;
-document.getElementById('hint-keys').hidden = coarse;
-document.getElementById('hint-touch').hidden = !coarse;
 
+
+function mountScooter() {
+  if (!state.furn || SC.riding) return;
+  if (!walking) setMode('walk');
+  SC.riding = true;
+  yaw = SC.yaw; pitch = -0.62;
+  pl.x = SC.x + Math.sin(SC.yaw) * 0.12; pl.z = SC.z + Math.cos(SC.yaw) * 0.12; pl.feet = SC.y; pl.vy = 0;
+  updateHints();
+}
+function dismountScooter() {
+  if (!SC.riding) return;
+  SC.riding = false; SC.note = 0;
+  SC.x = pl.x - Math.sin(yaw) * 0.12; SC.z = pl.z - Math.cos(yaw) * 0.12; SC.yaw = yaw; SC.y = pl.feet;
+  placeScooter();
+  scooterLabel.pos.copy(P(SC.x, SC.y + 1.25, SC.z));
+  const [nx, nz] = pushOut(pl.x + Math.cos(yaw) * 0.6, pl.z - Math.sin(yaw) * 0.6, pl.feet);   // step off to the right
+  if (!probe(nx, nz, pl.feet).blocked) { pl.x = nx; pl.z = nz; }
+  pitch = Math.max(pitch, -0.2);
+  updateHints();
+}
+function updateHints() {
+  document.getElementById('hint-keys').hidden = coarse || SC.riding;
+  document.getElementById('hint-touch').hidden = !coarse || SC.riding;
+  document.getElementById('hint-ride-keys').hidden = coarse || !SC.riding;
+  document.getElementById('hint-ride-touch').hidden = !coarse || !SC.riding;
+}
+const scooterLabel = labels.find(l => l.el.textContent.startsWith('Carl'));
+function rideUpdate(dt) {
+  let f = 0, turn = 0;
+  if (keys.KeyW || keys.ArrowUp) f++;
+  if (keys.KeyS || keys.ArrowDown) f--;
+  if (keys.KeyD || keys.ArrowRight) turn++;
+  if (keys.KeyA || keys.ArrowLeft) turn--;
+  f = Math.max(-1, Math.min(1, f + stick.y)); turn = Math.max(-1, Math.min(1, turn + stick.x));
+  yaw -= turn * 1.7 * dt;
+  const run = keys.ShiftLeft || keys.ShiftRight;
+  const sp = f * (run ? 2.8 : 1.8) * (f < 0 ? 0.5 : 1);
+  const x0 = pl.x, z0 = pl.z;
+  if (sp && tryMove(-Math.sin(yaw) * sp * dt, -Math.cos(yaw) * sp * dt) && f > 0) SC.note = 2.5;
+  SC.roll += Math.sign(sp) * Math.hypot(pl.x - x0, pl.z - z0) / 0.1;
+  SC.note = Math.max(0, SC.note - dt);
+  scooter.g.position.set(pl.x - Math.sin(yaw) * 0.12, pl.feet, pl.z - Math.cos(yaw) * 0.12);
+  scooter.g.rotation.y = yaw;
+  for (const w of scooter.wheels) w.rotation.x = -SC.roll;
+}
 function walkUpdate(dt) {
+  if (SC.riding) { rideUpdate(dt); finishWalkFrame(dt); return; }
   let f = 0, s = 0;
   if (keys.KeyW || keys.ArrowUp) f++;
   if (keys.KeyS || keys.ArrowDown) f--;
@@ -1078,10 +1218,12 @@ function walkUpdate(dt) {
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
   const dx = (fx * mf + rx * ms) * dt, dz = (fz * mf + rz * ms) * dt;
   if (dx || dz) tryMove(dx, dz);
-
+  finishWalkFrame(dt);
+}
+function finishWalkFrame(dt) {
   // vertical: glide up and down steps, fall if there is nothing underfoot
   const { floor } = probe(pl.x, pl.z, pl.feet);
-  if (Math.abs(floor - pl.feet) <= STEP_UP + 0.01 && pl.vy === 0) {
+  if (Math.abs(floor - pl.feet) <= stepUp() + 0.01 && pl.vy === 0) {
     pl.feet += (floor - pl.feet) * Math.min(1, dt * 14);
   } else if (floor < pl.feet) {
     pl.vy -= 9.8 * dt; pl.feet += pl.vy * dt;
@@ -1093,7 +1235,8 @@ function walkUpdate(dt) {
 
   const [bx0, bz0, bx1, bz1] = STAIR_BOX;
   const onStair = pl.x > bx0 && pl.x < bx1 && pl.z > bz0 && pl.z < bz1 && pl.feet > 0.1 && pl.feet < Y_MEZZ - 0.1;
-  const text = onStair ? 'Red staircase' : pl.feet > 2 ? 'Mezzanine · +4.2 m' : 'Ground floor';
+  const where = onStair ? 'Red staircase' : pl.feet > 2 ? 'Mezzanine · +4.2 m' : 'Ground floor';
+  const text = SC.note > 0 ? "Knee scooters don't do stairs" : SC.riding ? where + " · on Carl's knee scooter" : where;
   if (lvl.textContent !== text) lvl.textContent = text;
 }
 
@@ -1117,7 +1260,8 @@ function setMode(m) {
   for (const k in keys) keys[k] = false;
   stick.x = stick.y = 0; stick.id = null; knob.style.transform = '';
   if (w) { tween = null; jump('entrance'); if (narrow()) setCollapsed(true); placeStick(); }
-  else goTo('overview');
+  else { dismountScooter(); goTo('overview'); }
+  updateHints();
 }
 document.getElementById('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
 
@@ -1167,7 +1311,7 @@ function frame(now) {
 
   const W = app.clientWidth, Hh = app.clientHeight;
   for (const l of labels) {
-    const show = state.lbl && G[l.grp].visible && (!walking || l.pos.distanceTo(camera.position) < 16);
+    const show = state.lbl && G[l.grp].visible && (!walking || l.pos.distanceTo(camera.position) < 16) && !(l === scooterLabel && SC.riding);
     if (!show) { l.el.hidden = true; continue; }
     v.copy(l.pos).project(camera);
     if (v.z > 1 || v.z < -1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) { l.el.hidden = true; continue; }
