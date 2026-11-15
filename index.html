@@ -92,6 +92,7 @@
   .tg input:checked + .sw { background: var(--accent); }
   .tg input:checked + .sw::after { transform: translateX(12px); }
   .foot { font-size: 11px; color: var(--muted); line-height: 1.45; border-top: 1px solid var(--line); padding-top: 10px; }
+  .body { display: grid; gap: 14px; }
   .panel.min .body { display: none; }
 
   /* walk HUD */
@@ -154,7 +155,7 @@
     <button data-mode="orbit" aria-pressed="true">Orbit</button>
     <button data-mode="walk" aria-pressed="false">Walk</button>
   </div>
-  <div class="body" style="display:grid; gap:14px">
+  <div class="body">
     <p class="desc" id="desc-orbit">A simple massing model built from 34 photos and the ground-floor plan. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan. Switch to Walk to move through it at eye height.</p>
     <p class="desc" id="desc-walk" hidden>You walk at eye height (1.6&nbsp;m) and bump into walls, piers and furniture. Take the red stair to reach the mezzanine.</p>
     <div id="group-views">
@@ -818,7 +819,15 @@ const panel = document.getElementById('panel'), collapseBtn = document.getElemen
 function setCollapsed(min) {
   panel.classList.toggle('min', min);
   collapseBtn.textContent = min ? 'Show' : 'Hide'; collapseBtn.setAttribute('aria-expanded', String(!min));
+  placeStick();
 }
+// on phones the panel is a bottom sheet: keep the touch stick just above it
+function placeStick() {
+  const el = document.getElementById('stick');
+  if (!narrow()) { el.style.bottom = ''; return; }
+  el.style.bottom = Math.round(innerHeight - panel.getBoundingClientRect().top + 16) + 'px';
+}
+addEventListener('resize', placeStick);
 collapseBtn.addEventListener('click', () => setCollapsed(!panel.classList.contains('min')));
 const narrow = () => innerWidth < 560;
 if (narrow()) setCollapsed(true);
@@ -984,7 +993,7 @@ function setMode(m) {
   look = null;
   for (const k in keys) keys[k] = false;
   stick.x = stick.y = 0; stick.id = null; knob.style.transform = '';
-  if (w) { tween = null; jump('entrance'); if (narrow()) setCollapsed(true); }
+  if (w) { tween = null; jump('entrance'); if (narrow()) setCollapsed(true); placeStick(); }
   else goTo('overview');
 }
 document.getElementById('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
