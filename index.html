@@ -21,6 +21,7 @@
     --label-fg: #ffffff;
     --stick-bg: rgba(255, 255, 255, 0.55);
     --stick-ring: rgba(20, 26, 38, 0.18);
+    --scrim: rgba(20, 26, 38, 0.55);
     --display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
     --body: 'Inter', 'Segoe UI', system-ui, sans-serif;
   }
@@ -123,6 +124,27 @@
   }
   .knob { width: 46px; height: 46px; border-radius: 50%; background: var(--accent); box-shadow: 0 2px 8px rgba(10, 20, 40, 0.25); pointer-events: none; }
 
+  /* photo lightbox, opened by clicking the photo screen */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 20;
+    display: grid; place-items: center;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: var(--scrim);
+  }
+  .lightbox figure {
+    margin: 0; max-width: min(1100px, 100%); display: grid; gap: 10px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+    box-shadow: 0 20px 50px rgba(5, 10, 20, 0.35); position: relative;
+  }
+  .lightbox img { display: block; width: 100%; height: auto; max-height: calc(100vh - 140px); object-fit: contain; border-radius: 6px; }
+  .lightbox figcaption { font: 500 14px/1.4 var(--body); color: var(--fg); padding: 2px 4px 4px; }
+  .lb-close {
+    position: absolute; top: 18px; right: 18px;
+    font: 600 12.5px/1 var(--body); color: var(--fg); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; cursor: pointer;
+  }
+  #app canvas.over-photo { cursor: pointer; }
+
   @media (max-width: 560px) {
     .panel {
       top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
@@ -142,6 +164,14 @@
   <span class="hint" id="hint-touch" hidden>Drag to look · use the stick to walk</span>
 </div>
 <div class="stick" id="stick" hidden aria-hidden="true"><div class="knob" id="knob"></div></div>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lb-cap">
+  <figure>
+    <img id="lb-img" src="assets/fari-directors-2024-07.jpg" alt="Three people standing in front of a FARI banner reading AI for the Common Good Institute Brussels">
+    <figcaption id="lb-cap">FARI directors - July 2024</figcaption>
+    <button class="lb-close" id="lb-close">Close</button>
+  </figure>
+</div>
 
 <aside class="panel" id="panel">
   <div class="head">
@@ -695,13 +725,22 @@ function mannequin(x, z, ry, parent) {
   box(0.16, 0.22, 0.08, M.black, 0, 1.25, -0.15, g);
   colSeg([x, z], [x, z], 0.5, 0, 2.0, 'furn');
 }
-function screenStand(x, z, ry, parent) {
+function screenStand(x, z, ry, parent, face = M.screen) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
   box(0.6, 0.03, 0.45, M.black, 0, 0.015, 0, g);
   box(0.08, 1.35, 0.06, M.black, 0, 0.68, 0, g);
-  box(1.35, 0.78, 0.06, [M.black, M.black, M.black, M.black, M.screen, M.black], 0, 1.6, 0.04, g);
+  const scr = box(1.35, 0.78, 0.06, [M.black, M.black, M.black, M.black, face, M.black], 0, 1.6, 0.04, g);
   colBox(x, z, 1.35, 0.45, ry, 0, 2.0, 'furn');
+  return scr;
 }
+// photo shown on the screen near the atrium; the image is cropped to fill the 16:9-ish screen
+const photoTex = new THREE.TextureLoader().load('assets/fari-directors-2024-07.jpg', t => {
+  const imgAspect = t.image.width / t.image.height, scrAspect = 1.35 / 0.78;
+  if (imgAspect < scrAspect) { t.repeat.set(1, imgAspect / scrAspect); t.offset.set(0, (1 - t.repeat.y) / 2); }
+  else { t.repeat.set(scrAspect / imgAspect, 1); t.offset.set((1 - t.repeat.x) / 2, 0); }
+});
+photoTex.colorSpace = THREE.SRGBColorSpace; photoTex.anisotropy = 8;
+M.photo = std({ color: 0xffffff, map: photoTex, emissive: 0xffffff, emissiveMap: photoTex, emissiveIntensity: 0.45, roughness: 0.4 });
 function welcomeDesk(x, z, ry, parent) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
   box(2.6, 0.06, 1.0, [M.white, M.white, M.marble, M.white, M.white, M.white], 0, 0.95, 0, g);
@@ -756,7 +795,7 @@ welcomeDesk(...onFacade(5.0, 1.6), FACADE_ROT, G.furn);
 cityTable(...onFacade(17.8, 2.6), FACADE_ROT, G.furn);
 robotTable(15.4, 15.9, 0.2, G.furn);
 for (const [x, z, r] of [[12.7, 10.8, 0.4], [13.4, 11.2, -0.2], [3.5, 9.3, 0.6], [4.3, 8.7, 0.3]]) mannequin(x, z, r, G.furn);
-screenStand(8.3, 8.9, 0, G.furn);
+const photoScreen = screenStand(8.3, 8.9, 0, G.furn, M.photo);
 screenStand(19.6, 15.0, -Math.PI / 2, G.furn);
 rollup(11.9, 9.35, 0, G.furn);
 G.furn.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -783,6 +822,7 @@ const LABELS = [
   ['Welcome desk', ...(() => { const p = onFacade(5.0, 1.6); return [p[0], 2.3, p[1]]; })(), 'furn'],
   ['City model & robot arm', 15.6, 1.9, 17.2, 'furn'],
   ['Exoskeleton demos', 13.0, 2.25, 11.0, 'furn'],
+  ['Photo · click to open', 8.3, 2.15, 8.95, 'furn'],
 ];
 const labelLayer = document.getElementById('labels');
 const labels = LABELS.map(([text, x, y, z, grp]) => {
@@ -896,7 +936,8 @@ document.getElementById('spots').addEventListener('click', e => {
 const keys = {};
 const MOVE_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'];
 addEventListener('keydown', e => {
-  if (!walking) return;
+  if (e.code === 'Escape' && !lightbox.hidden) { closePhoto(); return; }
+  if (!walking || !lightbox.hidden) return;
   if (e.code === 'Escape') { setMode('orbit'); return; }
   if (MOVE_KEYS.includes(e.code)) { keys[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault(); }
 });
@@ -905,6 +946,52 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 // drag to look (mouse, pen or touch on the 3D view)
 const canvas = renderer.domElement;
+
+// ---------- clicking the photo screen opens the photo with its caption ----------
+const lightbox = document.getElementById('lightbox');
+let photoOpener = null;
+function openPhoto() {
+  photoOpener = document.activeElement;
+  for (const k in keys) keys[k] = false;
+  lightbox.hidden = false;
+  document.getElementById('lb-close').focus();
+}
+function closePhoto() {
+  lightbox.hidden = true;
+  if (photoOpener && photoOpener.focus) photoOpener.focus();
+}
+document.getElementById('lb-close').addEventListener('click', closePhoto);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closePhoto(); });
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+function photoHit(clientX, clientY) {
+  if (!G.furn.visible) return false;
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  if (!ray.intersectObject(photoScreen, false).length) return false;
+  // make sure nothing solid stands between the camera and the screen
+  for (const h of ray.intersectObject(root, true)) {
+    if (!h.object.isMesh || !shown(h.object)) continue;
+    const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
+    if (mats.every(m => m.transparent)) continue;
+    return h.object === photoScreen;
+  }
+  return false;
+}
+let press = null;
+canvas.addEventListener('pointerdown', e => { press = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+canvas.addEventListener('pointerup', e => {
+  if (!press) return;
+  const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y), quick = performance.now() - press.t < 600;
+  press = null;
+  if (moved < 6 && quick && photoHit(e.clientX, e.clientY)) openPhoto();
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse' || e.buttons) return;
+  canvas.classList.toggle('over-photo', photoHit(e.clientX, e.clientY));
+});
 let look = null;
 canvas.addEventListener('pointerdown', e => {
   if (!walking || look) return;
