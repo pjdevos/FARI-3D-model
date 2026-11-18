@@ -1,0 +1,8 @@
+# reference photos used to build the model (large, and many show people): kept out of the repository
+images/
+# older versions and builds
+oude files/
+*.zip
+FARI Experience Hub - *.html
+# local Claude Code settings
+.claude/settings.local.json

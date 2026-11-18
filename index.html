@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>FARI Experience Hub</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +18,6 @@
     --accent: #1f47d6;
     --accent-ink: #ffffff;
     --chip: #eef2f8;
-    --label-bg: rgba(20, 26, 38, 0.82);
-    --label-fg: #ffffff;
     --stick-bg: rgba(255, 255, 255, 0.55);
     --stick-ring: rgba(20, 26, 38, 0.18);
     --scrim: rgba(20, 26, 38, 0.55);
@@ -29,14 +28,14 @@
     :root:not([data-theme="light"]) {
       --bg: #0f131a; --scene: #121821; --ground: #1a212c; --panel: rgba(22, 28, 38, 0.93);
       --fg: #e8ecf3; --muted: #9ba6b9; --line: #2b3444; --accent: #6a8dff; --accent-ink: #0b1020;
-      --chip: #1e2633; --label-bg: rgba(240, 244, 250, 0.9); --label-fg: #141a26;
+      --chip: #1e2633;
       --stick-bg: rgba(22, 28, 38, 0.6); --stick-ring: rgba(232, 236, 243, 0.22); color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --bg: #0f131a; --scene: #121821; --ground: #1a212c; --panel: rgba(22, 28, 38, 0.93);
     --fg: #e8ecf3; --muted: #9ba6b9; --line: #2b3444; --accent: #6a8dff; --accent-ink: #0b1020;
-    --chip: #1e2633; --label-bg: rgba(240, 244, 250, 0.9); --label-fg: #141a26;
+    --chip: #1e2633;
     --stick-bg: rgba(22, 28, 38, 0.6); --stick-ring: rgba(232, 236, 243, 0.22); color-scheme: dark;
   }
   html, body { height: 100%; }
@@ -45,16 +44,6 @@
   #app canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   #app canvas.walking { cursor: grab; }
   #app canvas.walking:active { cursor: grabbing; }
-  #labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .lbl {
-    position: absolute; left: 0; top: 0; transform: translate(-50%, -100%);
-    background: var(--label-bg); color: var(--label-fg); font: 500 11.5px/1 var(--body);
-    padding: 5px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.01em;
-  }
-  .lbl::after {
-    content: ""; position: absolute; left: 50%; bottom: -4px; width: 7px; height: 7px;
-    background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 1px; z-index: -1;
-  }
   .panel {
     position: absolute;
     top: calc(14px + env(safe-area-inset-top, 0px));
@@ -156,7 +145,7 @@
   @media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
 </style>
 
-<div id="app"><div id="labels"></div></div>
+<div id="app"></div>
 
 <div class="hud" id="hud" hidden>
   <span class="lvl" id="lvl">Ground floor</span>
@@ -188,8 +177,8 @@
     <button data-mode="walk" aria-pressed="false">Walk</button>
   </div>
   <div class="body">
-    <p class="desc" id="desc-orbit">A simple massing model built from the floor plan and labelled photos. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan. Switch to Walk to move through it at eye height.</p>
-    <p class="desc" id="desc-walk" hidden>You walk at eye height (1.6&nbsp;m) and bump into walls, piers and furniture. Take the red stair to reach the mezzanine.</p>
+    <p class="desc" id="desc-orbit">A simple massing model built from the floor plan and labelled photos. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan. Switch to Walk to move through it at eye height. Click a photo on a screen to see it large, or click Carl&rsquo;s knee scooter to ride it.</p>
+    <p class="desc" id="desc-walk" hidden>You walk at eye height (1.6&nbsp;m) and bump into walls, piers and furniture. Take the red stair to reach the mezzanine. Meeting room 1 is one step down. Click a photo to see it large; click Carl&rsquo;s knee scooter, or press <kbd>E</kbd> next to it, to ride.</p>
     <div id="group-views">
       <div class="group-title">Views</div>
       <div class="views" id="views">
@@ -219,10 +208,9 @@
         <label class="tg"><input type="checkbox" id="t-ceil" checked><span class="sw"></span>Ceiling</label>
         <label class="tg"><input type="checkbox" id="t-mezz" checked><span class="sw"></span>Mezzanine</label>
         <label class="tg"><input type="checkbox" id="t-furn" checked><span class="sw"></span>Furniture</label>
-        <label class="tg"><input type="checkbox" id="t-lbl" checked><span class="sw"></span>Labels</label>
       </div>
     </div>
-    <div class="foot">Footprint traced from the floor plan at roughly 3Footprint traced from the floor plan at roughly 3&nbsp;cm per pixel; heightsnbsp;cm per pixel; heights (about 4.2&nbsp;m to the mezzanine, 8.4&nbsp;m to the board-marked concrete ceiling) are estimated from the photos. Treat it as a sketch, not a survey.</div>
+    <div class="foot">Footprint traced from the floor plan at roughly 3&nbsp;cm per pixel; the mezzanine is at 3.36&nbsp;m (21 stair risers of 16&nbsp;cm, counted on site), and the board-marked concrete ceiling at about 6.6&nbsp;m is estimated from the photos. Treat it as a sketch, not a survey.</div>
   </div>
 </aside>
 
@@ -309,7 +297,7 @@ const woodTex = canvasTex(512, 512, (g, w, h) => {
   const bh = 22;
   for (let y = 0; y < h; y += bh) {
     const v = rand() * 26 - 13;
-    g.fillStyle = `rgb(${128 + v},${114 + v},${97 + v})`; g.fillRect(0, y, w, bh);
+    g.fillStyle = `rgb(${121 + v},${116 + v},${108 + v})`; g.fillRect(0, y, w, bh);
     for (let k = 0; k < 6; k++) {
       g.strokeStyle = `rgba(70,58,45,${0.08 + rand() * 0.12})`; g.lineWidth = 1;
       g.beginPath(); const yy = y + 3 + rand() * (bh - 6); g.moveTo(0, yy);
@@ -387,6 +375,12 @@ const M = {
   terracotta: std({ color: 0xc8764a, roughness: 0.85 }),
   trunk: std({ color: 0x6b5a45, roughness: 0.9 }),
   leaf: std({ color: 0x4f7d3a, roughness: 0.7, side: THREE.DoubleSide }),
+  felt: std({ color: 0xb4b7ba, roughness: 1 }),
+  darkGlass: std({ color: 0x1b1e23, roughness: 0.15, metalness: 0.2 }),
+  cork: std({ color: 0xb48a5a, roughness: 0.95 }),
+  shard: std({ color: 0xbfe6e2, transparent: true, opacity: 0.78, roughness: 0.15 }),
+  stoneDark: std({ color: 0x6d7074, roughness: 0.9 }),
+  stoneLight: std({ color: 0xcdbfa3, roughness: 0.95 }),
 };
 M.ceilWood.map = woodTex;
 
@@ -438,10 +432,46 @@ function shapeOf(pts, sign = -1) {
   pts.forEach(([x, z], i) => i ? s.lineTo(x, sign * z) : s.moveTo(x, sign * z));
   s.closePath(); return s;
 }
+// a flat polygon at height y: a floor facing up, or (up = false) a ceiling facing down
+function flat(pts, y, mat, parent, up = true) {
+  const geo = new THREE.ShapeGeometry(shapeOf(pts, up ? -1 : 1)); geo.rotateX(up ? -Math.PI / 2 : Math.PI / 2);
+  const m = new THREE.Mesh(geo, mat); m.position.y = y; m.receiveShadow = true; parent.add(m); return m;
+}
 function rectPath([x0, z0, x1, z1], sign = -1) {
   const p = new THREE.Path();
   p.moveTo(x0, sign * z0); p.lineTo(x1, sign * z0); p.lineTo(x1, sign * z1); p.lineTo(x0, sign * z1); p.closePath();
   return p;
+}
+
+// ---------- every screen is a photo frame ----------
+// Screens are numbered in the order they are built. SCREEN_PHOTOS puts a photo on a screen by its number; clicking the
+// screen then opens the photo large with its caption (copy captions exactly as supplied). A screen without a photo is
+// an empty frame that shows its number, so you can see which number to use. The two photo stands in PHOTOS (further
+// down) are separate and keep their own place.
+const SCREEN_PHOTOS = [
+  // example: { screen: 3, src: "assets/screens/<file>.jpg", caption: "Caption exactly as supplied", alt: "What the photo shows" },
+];
+const SHOTS = new Map();   // clickable screen mesh -> { photo, face: material index of its front, or null for a plane }
+let screenCount = 0;
+function emptyScreenMat(n) {
+  const tex = canvasTex(256, 160, (g, W, H) => {
+    const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#262c36'); gr.addColorStop(1, '#353d4a');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 3; g.strokeRect(14, 14, W - 28, H - 28);
+    g.fillStyle = 'rgba(255,255,255,0.22)';                                   // a small landscape: the sign for "photo"
+    g.beginPath(); g.moveTo(88, 108); g.lineTo(118, 70); g.lineTo(140, 96); g.lineTo(152, 84); g.lineTo(172, 108); g.closePath(); g.fill();
+    g.beginPath(); g.arc(150, 62, 8, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.6)'; g.font = '600 18px Arial, sans-serif'; g.textAlign = 'right'; g.fillText(String(n), W - 24, H - 24);
+  });
+  return std({ color: 0xffffff, map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.3, roughness: 0.4 });
+}
+// make `mesh` the next numbered screen, w x h metres; face is the material index of its front (boxes), null for a plane
+function asScreen(mesh, w, h, face = 4) {
+  const n = ++screenCount, ph = SCREEN_PHOTOS.find(p => p.screen === n);
+  const mat = ph ? photoMaterial(ph.src, w / h) : emptyScreenMat(n);
+  if (face === null) mesh.material = mat; else { mesh.material = mesh.material.slice(); mesh.material[face] = mat; }
+  if (ph) SHOTS.set(mesh, { photo: ph, face });
+  return mesh;
 }
 
 // ---------- plan ----------
@@ -449,16 +479,39 @@ function rectPath([x0, z0, x1, z1], sign = -1) {
 // towards -z, with the red staircase straight ahead. +x is on your right as you walk in. The two street
 // facades fan out from the corner at about 19.5 degrees each. Proportions come from the floor plan
 // (roughly 3 cm per pixel) and the photos: a sketch, not a survey.
-const Y_MEZZ = 4.2, Y_CEIL = 8.4, Y_TOP = 8.75;
+// The red stair was counted on site: risers of 16 cm, 11 up to the half landing and 10 more to the first floor.
+// That fixes the first floor at 3.36 m; the ceiling height is still an estimate from the photos.
+const RISE = 0.16, N1 = 11, N2 = 10, RUN = 0.27;
+const Y_MEZZ = Math.round((N1 + N2) * RISE * 100) / 100, Y_CEIL = Y_MEZZ + 3.24, Y_TOP = Y_CEIL + 0.35;
 const ANG = 19.5 * Math.PI / 180, SIN = Math.sin(ANG), COS = Math.cos(ANG), TAN = Math.tan(ANG);
 const E_L = [-2.5, 0], E_R = [2.5, 0];
-const L_END = [E_L[0] - 12.6 * SIN, -12.6 * COS];             // end of the left street facade
+const L_END = [E_L[0] - 11.9 * SIN, -11.9 * COS];             // end of the left street facade
 const R_END = [E_R[0] + 19.1 * SIN, -19.1 * COS];             // end of the right street facade
-const STAIR_BOX = [-2.8, -17.4, 0.3, -13.2];                   // red stair box: x0, z0 (back), x1, z1 (front, open)
+const STAIR_BOX = [-1.5, -17.8, 1.15, -12.6];                  // red stair box, straight behind the middle pier: x0, z0 (back), x1, z1 (front, open)
 const [SB_X0, SB_Z0, SB_X1, SB_Z1] = STAIR_BOX;
-const M_END = [R_END[0] - 6 * COS, R_END[1] - 6 * SIN];       // inner corner at the far end of Meeting room 1
-const FOOT = [E_R, R_END, M_END, [SB_X1, SB_Z1], [SB_X1, SB_Z0], [SB_X0, SB_Z0], [SB_X0, SB_Z1], L_END, E_L];
-const EXTERIOR = new Set([0, 7]), ENTRANCE_EDGE = 8;
+// On the floor plan the niche runs parallel to the left facade, so it is turned by the facade angle. Everything in it
+// is built in its own frame (STAIR_BOX, as if it were square to the atrium) and turned about the middle of its mouth:
+// NT takes a point from that frame to the plan, NI does the reverse.
+const NA = ANG, NP = [(SB_X0 + SB_X1) / 2, SB_Z1], NC = Math.cos(NA), NS = Math.sin(NA);
+const NT = ([x, z]) => { const dx = x - NP[0], dz = z - NP[1]; return [NP[0] + dx * NC + dz * NS, NP[1] - dx * NS + dz * NC]; };
+const NI = ([x, z]) => { const dx = x - NP[0], dz = z - NP[1]; return [NP[0] + dx * NC - dz * NS, NP[1] + dx * NS + dz * NC]; };
+const NF_L = NT([SB_X0, SB_Z1]), NF_R = NT([SB_X1, SB_Z1]);   // the two front corners of the niche, on the plan
+// a group whose children are placed in the niche frame
+function nicheGroup(parent) {
+  const o = new THREE.Group(); o.position.set(NP[0], 0, NP[1]); o.rotation.y = NA; parent.add(o);
+  const g = new THREE.Group(); g.position.set(-NP[0], 0, -NP[1]); o.add(g); return g;
+}
+// run build() with colSeg/colBox/SURF coordinates in the niche frame; afterwards they are turned onto the plan
+function inNiche(build) {
+  const c0 = COL.length, s0 = SURF.length; build();
+  for (let i = c0; i < COL.length; i++) { const c = COL[i]; [c.ax, c.az] = NT([c.ax, c.az]); [c.bx, c.bz] = NT([c.bx, c.bz]); }
+  for (let i = s0; i < SURF.length; i++) { const f = SURF[i].test; SURF[i].test = (x, z) => f(...NI([x, z])); }
+}
+const M_END = [R_END[0] - 5.1 * COS, R_END[1] - 5.1 * SIN];   // inner corner at the far end of Meeting room 1
+// in front of the inner door (z = 0) lies the entrance porch, PV metres deep, with the outer door on the street
+const PV = 2.3, PORCH_IN = 1.3, PORCH_OUT = 2.0, PORCH_SAG = 0.25;   // porch depth, half-widths at the inner screen and at the street, bow of the screen
+const FOOT = [E_R, R_END, M_END, NF_R, NT([SB_X1, SB_Z0]), NT([SB_X0, SB_Z0]), NF_L, L_END, E_L, [E_L[0], PV], [E_R[0], PV]];
+const EXTERIOR = new Set([0, 7]), PORCH_SIDES = new Set([8, 10]), ENTRANCE_EDGE = 9;
 // a point t metres along a facade from the entrance corner and n metres in from the glass
 const onR = (t, n = 0) => [E_R[0] + SIN * t - COS * n, E_R[1] - COS * t - SIN * n];
 const onL = (t, n = 0) => [E_L[0] - SIN * t + COS * n, E_L[1] - COS * t - SIN * n];
@@ -471,7 +524,31 @@ const xl = z => E_L[0] + GAL + TAN * z, xr = z => E_R[0] - GAL - TAN * z;
 const xFL = z => E_L[0] + TAN * z, xFR = z => E_R[0] - TAN * z;   // the glass of each facade
 const VOID = [[xl(ZV), ZV], [xr(ZV), ZV], [xr(ZA), ZA], [xl(ZA), ZA]];
 const STAIRWELL = STAIR_BOX;
-const DOWN = [-0.65, -17.2, 0.25, -14.4];                      // flight down to the back door, beside the stair up
+// upstairs the red landing continues as a strip along the left wall, over the first flight, to the kitchen door;
+// WELL is what stays open in the first floor
+const XK = SB_X0 + 1.0, ZK = SB_Z1 - 2.4;
+// the stair: first step ZS, front edge of the half landing ZLD, and ZW where the second flight reaches the first floor
+const ZS = SB_Z1 - 0.9, ZLD = ZS - (N1 - 1) * RUN, ZW = ZLD + (N2 - 1) * RUN;
+const ANNEMIE = [-3.9, -10.8];                                // the table in meeting room Annemie
+const WELL = [[XK, ZW], [SB_X1, ZW], [SB_X1, SB_Z0], [SB_X0, SB_Z0], [SB_X0, ZK], [XK, ZK]].map(NT);
+const DOWN = [SB_X1 - 0.95, SB_Z0 + 0.2, SB_X1 - 0.05, SB_Z1 - 2.2];   // flight down to the back door, under the second flight up (niche frame)
+const DOWN_W = [[DOWN[0], DOWN[1]], [DOWN[2], DOWN[1]], [DOWN[2], DOWN[3]], [DOWN[0], DOWN[3]]].map(NT);   // the same on the plan
+// Meeting room 1 lies one step lower than the atrium. The step runs square to the long facade,
+// with a short ramp against the inner wall of the room.
+const MR_STEP = 0.16, MR_T = 12.8, RAMP_LEN = 1.3, RAMP_N = 4.2;
+function mrWallAt(t) {   // where the line square to the facade at t metres meets the inner wall of the room
+  const [px, pz] = onR(t), [ax, az] = NF_R, dx = M_END[0] - ax, dz = M_END[1] - az;
+  return onR(t, ((ax - px) * dz - (az - pz) * dx) / (IN_R[0] * dz - IN_R[1] * dx));
+}
+const MR_LOW = [onR(MR_T), R_END, M_END, mrWallAt(MR_T)];
+const MR_RAMP = [onR(MR_T, RAMP_N), mrWallAt(MR_T), mrWallAt(MR_T + RAMP_LEN), onR(MR_T + RAMP_LEN, RAMP_N)];
+// height of the ground floor itself at a point: 0 everywhere except in Meeting room 1
+function baseFloor(x, z) {
+  if (!inPoly(MR_LOW, x, z)) return 0;
+  const t = (x - E_R[0]) * SIN - z * COS, n = -(x - E_R[0]) * COS - z * SIN;
+  if (n >= RAMP_N && t < MR_T + RAMP_LEN) return -MR_STEP * Math.max(0, t - MR_T) / RAMP_LEN;
+  return -MR_STEP;
+}
 function inPoly(poly, x, z) {
   let c = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -508,6 +585,27 @@ const TX = {
   welcome: MAT_TEXT(bannerTex(256, 640, { c0: '#2c3fae', c1: '#1a2a86', circle: false, top: 230, lines: [['WELKOM', 42], ['BIENVENUE', 34], ['WELCOME', 42]] })),
   pink1: MAT_TEXT(bannerTex(384, 512, { c0: '#d43c9c', c1: '#c22f8d', ink: '#fbe7f3', circle: false, top: 60, lines: [['NOT EVERYTHING THAT CAN', 24], ['BE CONTROLLED MATTERS', 24], ['AND NOT EVERYTHING THAT', 24], ['MATTERS CAN BE CONTROLLED.', 24]] })),
   pink2: MAT_TEXT(bannerTex(256, 384, { c0: '#d43c9c', c1: '#c22f8d', ink: '#fbe7f3', circle: false, top: 50, lines: [['IT IS NOT', 26], ['THE MACHINE.', 26], ['IT IS YOU.', 26]] })),
+  // in the kitchen corridor: a fire hose cabinet (red frame, dark red glass, the white H sign) and an evacuation plan
+  hose: MAT_TEXT(canvasTex(256, 352, (g, W, H) => {
+    g.fillStyle = '#c41d15'; g.fillRect(0, 0, W, H); g.fillStyle = '#5a0f0c'; g.fillRect(16, 16, W - 32, H - 32);
+    g.fillStyle = '#ffffff'; g.fillRect(70, 190, 116, 116); g.fillStyle = '#c41d15'; g.fillRect(80, 200, 96, 96);
+    g.fillStyle = '#ffffff'; g.fillRect(98, 214, 18, 68); g.fillRect(140, 214, 18, 68); g.fillRect(98, 240, 60, 16);
+  })),
+  evac: MAT_TEXT(canvasTex(256, 256, (g, W, H) => {
+    g.fillStyle = '#c41d15'; g.fillRect(0, 0, W, H); g.fillStyle = '#ffffff'; g.fillRect(14, 14, W - 28, H - 28);
+    g.fillStyle = '#2e8b3e'; g.fillRect(14, 14, W - 28, 26);
+    g.strokeStyle = '#333'; g.lineWidth = 3; g.beginPath(); g.moveTo(50, 90); g.lineTo(200, 80); g.lineTo(215, 190); g.lineTo(70, 200); g.closePath(); g.stroke();
+    g.lineWidth = 1.5; g.beginPath(); g.moveTo(120, 85); g.lineTo(130, 195); g.moveTo(60, 140); g.lineTo(210, 135); g.stroke();
+  })),
+  // the two text walls of the entrance porch (text only, no partner logos)
+  vestFari: MAT_TEXT(bannerTex(512, 640, { c0: '#f4f5f7', c1: '#eceef1', ink: '#1b2a5c', circle: false, top: 90, left: 60, lines: [['FARI', 130, 800], ['AI FOR THE', 40, 500], ['COMMON GOOD', 40, 500], ['INSTITUTE', 40, 500], ['BRUSSELS', 40, 800], ['', 40], ['ULB · VUB', 30, 700]] })),
+  vestBridge: MAT_TEXT(bannerTex(512, 640, { c0: '#f4f5f7', c1: '#eceef1', ink: '#1b2a5c', circle: false, top: 110, left: 60, lines: [['BRIDGING THE', 50, 800], ['GAP BETWEEN', 50, 800], ['TECHNOLOGY', 50, 800], ['AND SOCIETY.', 50, 800], ['', 50], ['IN PARTNERSHIP WITH', 18, 600]] })),
+  // lettering on the three windows above the entrance (reads from the street, mirrored from inside, as in reality)
+  letters: ['ULB', 'FARI', 'VUB'].map(t => std({ map: canvasTex(512, 256, (g, W, H) => {
+    g.clearRect(0, 0, W, H); g.fillStyle = 'rgba(245,247,250,0.9)'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '800 150px Arial, sans-serif'; g.fillText(t, W / 2, H / 2);
+  }), transparent: true, depthWrite: false, roughness: 0.3, side: THREE.DoubleSide })),
+  ulb: MAT_TEXT(bannerTex(256, 768, { c0: '#2a5cf0', c1: '#0f2fb4', top: 170, lines: [['UNIVERSITÉ LIBRE', 15, 600], ['DE BRUXELLES', 15, 600], ['ULB · VUB', 30], ['VRIJE UNIVERSITEIT', 15, 600], ['BRUSSEL', 15, 600]] })),
   logo: std({ map: canvasTex(512, 256, (g, W, H) => {
     g.clearRect(0, 0, W, H); g.fillStyle = 'rgba(245,247,250,0.92)';
     g.font = '800 120px Arial, sans-serif'; g.fillText('FARI', 40, 140);
@@ -526,11 +624,12 @@ function hang(mat, w, h, x, y, z, nx, nz, parent) {
 
 // ---------- floor, mezzanine slab, ceiling ----------
 {
-  const floorShape = shapeOf(FOOT); floorShape.holes.push(rectPath(DOWN));
+  // the ground floor at level 0 stops at the step into Meeting room 1 (its lowered floor is built further down)
+  const floorShape = shapeOf([FOOT[0], MR_LOW[0], MR_LOW[3], ...FOOT.slice(3)]); floorShape.holes.push(polyPath(DOWN_W));
   const fg = new THREE.ShapeGeometry(floorShape); fg.rotateX(-Math.PI / 2);
   const floor = new THREE.Mesh(fg, M.floor); floor.receiveShadow = true; G.core.add(floor);
 
-  const slabShape = shapeOf(FOOT); slabShape.holes.push(polyPath(VOID), rectPath(STAIRWELL));
+  const slabShape = shapeOf(FOOT); slabShape.holes.push(polyPath(VOID), polyPath(WELL));
   const sg = new THREE.ExtrudeGeometry(slabShape, { depth: 0.3, bevelEnabled: false }); sg.rotateX(-Math.PI / 2);
   const slab = new THREE.Mesh(sg, M.white); slab.position.y = Y_MEZZ - 0.3; slab.receiveShadow = true; G.mezz.add(slab);
   const mf = new THREE.ShapeGeometry(slabShape); mf.rotateX(-Math.PI / 2);
@@ -541,80 +640,228 @@ function hang(mat, w, h, x, y, z, nx, nz, parent) {
   const ug = new THREE.ShapeGeometry(shapeOf(FOOT, 1)); ug.rotateX(Math.PI / 2);
   const under = new THREE.Mesh(ug, M.ceilWood); under.position.y = Y_CEIL - 0.004; G.ceil.add(under);
 
-  SURF.push({ test: (x, z) => inPoly(FOOT, x, z) && !inPoly(VOID, x, z) && !inRect(STAIRWELL, x, z), top: Y_MEZZ, bottom: Y_MEZZ - 0.3, grp: 'mezz' });
+  SURF.push({ test: (x, z) => inPoly(FOOT, x, z) && !inPoly(VOID, x, z) && !inPoly(WELL, x, z), top: Y_MEZZ, bottom: Y_MEZZ - 0.3, grp: 'mezz' });
 }
 
 // ---------- perimeter walls ----------
 const perimeter = [];
-function exteriorWall(p1, p2) {
+// A street facade. Ground floor: shop windows above a low white bench, with a row of small top lights.
+// First floor: separate dark-framed windows between broad piers, with the sill at counter height.
+const BENCH_H = 0.55, BENCH_D = 0.45, BENCH_OFF = 0.4;
+function exteriorWall(p1, p2, inward) {
   const g = new THREE.Group();
   const [x1, z1] = p1, [x2, z2] = p2, L = Math.hypot(x2 - x1, z2 - z1);
-  const ux = (x2 - x1) / L, uz = (z2 - z1) / L, at = t => [x1 + ux * t, z1 + uz * t];
-  const seg = (t0, t1, y0, y1, th, mat) => { const a = at(t0), b = at(t1); const m = boxBetween(a[0], a[1], b[0], b[1], y0, y1, th, mat); g.add(m); return m; };
-  const T = 0.35;
-  seg(0, L, 0, 0.3, T, M.white); seg(0, L, 3.7, 4.95, T, M.white); seg(0, L, 7.75, Y_TOP, T, M.white);
-  const n = Math.max(1, Math.round(L / 3.3)), bay = L / n, pw = 0.42;
-  for (let k = 0; k <= n; k++) { const t = k * bay; seg(Math.max(0, t - pw / 2), Math.min(L, t + pw / 2), 0, Y_TOP, T + 0.02, M.white); }
+  const ux = (x2 - x1) / L, uz = (z2 - z1) / L, at = (t, off = 0) => [x1 + ux * t + inward[0] * off, z1 + uz * t + inward[1] * off];
+  const seg = (t0, t1, y0, y1, th, mat, off = 0) => { const a = at(t0, off), b = at(t1, off); const m = boxBetween(a[0], a[1], b[0], b[1], y0, y1, th, mat); g.add(m); return m; };
+  const T = 0.35, S0 = BENCH_H, H0 = Y_MEZZ - 0.5, TR = H0 - 0.6, S1 = Y_MEZZ + 0.95, H1 = Y_MEZZ + 2.3, YB = Y_MEZZ + 0.25;
+  // outside the wall is clad in stone: dark grey up to a band at first-floor level, beige above (as on Street View)
+  const skin = (t0, t1, y0, y1, mat, th = 0.04) => seg(t0, t1, y0, y1, th, mat, -(T / 2 + th / 2 + 0.005));
+  seg(0, L, 0, S0, T, M.white); seg(0, L, H0, S1, T, M.white); seg(0, L, H1, Y_TOP, T, M.white);
+  skin(0, L, 0, S0, M.stoneDark); skin(0, L, H0, YB, M.stoneDark); skin(0, L, YB - 0.14, YB, M.stoneDark, 0.1);
+  skin(0, L, YB, S1, M.stoneLight); skin(0, L, H1, Y_TOP, M.stoneLight);
+  seg(0, L, -MR_STEP, S0, BENCH_D, M.white, BENCH_OFF);                    // the bench along the windows
+  const n = Math.max(1, Math.round(L / 3.3)), bay = L / n, pw = 0.5;
+  for (let k = 0; k <= n; k++) {
+    const t = k * bay, ta = Math.max(0, t - pw / 2), tb = Math.min(L, t + pw / 2);
+    seg(ta, tb, S0, H0, T, M.white); skin(ta, tb, S0, H0, M.stoneDark);
+  }
   for (let k = 0; k < n; k++) {
+    // shop window
     const t0 = k * bay + pw / 2, t1 = (k + 1) * bay - pw / 2;
-    seg(t0, t1, 0.3, 3.7, 0.03, M.glass); seg(t0, t1, 4.95, 7.75, 0.03, M.glass);
-    seg(t0, t1, 3.0, 3.07, 0.09, M.frame);
-    for (const [y0, y1] of [[0.3, 3.7], [4.95, 7.75]]) {
-      seg(t0, t0 + 0.06, y0, y1, 0.09, M.frame); seg(t1 - 0.06, t1, y0, y1, 0.09, M.frame);
-      seg(t0, t1, y0, y0 + 0.06, 0.09, M.frame); seg(t0, t1, y1 - 0.06, y1, 0.09, M.frame);
-    }
+    seg(t0, t1, S0, H0, 0.03, M.glass);
+    seg(t0, t1, TR - 0.03, TR + 0.03, 0.08, M.white);
+    seg(t0, t0 + 0.05, S0, H0, 0.08, M.white); seg(t1 - 0.05, t1, S0, H0, 0.08, M.white);
+    seg(t0, t1, S0, S0 + 0.05, 0.08, M.white); seg(t0, t1, H0 - 0.05, H0, 0.08, M.white);
+    for (const f of [1 / 3, 2 / 3]) { const tm = t0 + (t1 - t0) * f; seg(tm - 0.025, tm + 0.025, TR, H0, 0.08, M.white); }
+    // first-floor window
+    // first-floor window: wider than tall, three lights across with a transom
+    const c = (k + 0.5) * bay, w1 = bay * 0.66, a = c - w1 / 2, b = c + w1 / 2;
+    seg(k * bay, a, S1, H1, T, M.white); seg(b, (k + 1) * bay, S1, H1, T, M.white);
+    skin(k * bay, a, S1, H1, M.stoneLight); skin(b, (k + 1) * bay, S1, H1, M.stoneLight);
+    seg(a, b, S1, H1, 0.03, M.glass);
+    seg(a, a + 0.06, S1, H1, 0.1, M.frame); seg(b - 0.06, b, S1, H1, 0.1, M.frame);
+    for (const f of [1 / 3, 2 / 3]) { const tm = a + w1 * f; seg(tm - 0.025, tm + 0.025, S1, H1, 0.1, M.frame); }
+    seg(a, b, S1, S1 + 0.06, 0.1, M.frame); seg(a, b, H1 - 0.06, H1, 0.1, M.frame); seg(a, b, S1 + 0.42, S1 + 0.47, 0.1, M.frame);
   }
   return g;
 }
-function interiorWall(p1, p2) {
-  const g = new THREE.Group();
-  g.add(boxBetween(p1[0], p1[1], p2[0], p2[1], 0, Y_TOP, 0.25, M.plaster));
+// an interior wall, optionally with a door opening: op = { d: distance of its middle from p1, w: width, y0: floor level, h: height }
+function interiorWall(p1, p2, op = null) {
+  const g = new THREE.Group(), seg = (a, b, y0, y1) => g.add(boxBetween(a[0], a[1], b[0], b[1], y0, y1, 0.25, M.plaster));
+  if (!op) { seg(p1, p2, 0, Y_TOP); return g; }
+  const [a, b] = openingEnds(p1, p2, op);
+  seg(p1, p2, 0, op.y0); seg(p1, a, op.y0, Y_TOP); seg(b, p2, op.y0, Y_TOP); seg(a, b, op.y0 + op.h, Y_TOP);
   return g;
 }
-// the corner entrance: glass door between two leaning pillars, banners on the solid corners either side,
-// and a window above the bridge that links the two galleries
+function openingEnds(p1, p2, op) {
+  const L = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), ux = (p2[0] - p1[0]) / L, uz = (p2[1] - p1[1]) / L;
+  return [op.d - op.w / 2, op.d + op.w / 2].map(d => [p1[0] + ux * d, p1[1] + uz * d]);
+}
+// the door from the FARI office to the kitchen corridor: in the office's inner wall (FOOT edge 2, from M_END), near the far end
+const KITCHEN_DOOR = { d: 0.85, w: 1.0, y0: Y_MEZZ, h: 2.2 };
+const WALL_OPENINGS = { 2: KITCHEN_DOOR };
+// The street side of the entrance porch: stone piers, a fixed glass pane on either side and a double glass door in
+// the middle. That door was smashed during a demonstration, so its opening is empty and the glass lies on the mat
+// inside (the boards that cover it now are left out). Above it three windows lettered ULB, FARI and VUB.
 function entranceWall() {
-  const g = new THREE.Group(), T = 0.35;
+  const g = new THREE.Group(), T = 0.35, PW = PORCH_OUT, DW = 0.9; g.position.z = PV;
   const w = (x0, x1, y0, y1, th, mat, z = 0) => { const m = boxBetween(x0, z, x1, z, y0, y1, th, mat); g.add(m); return m; };
-  w(-2.5, -1.3, 0, Y_TOP, T, M.white); w(1.3, 2.5, 0, Y_TOP, T, M.white);
-  w(-1.3, 1.3, 3.2, 4.95, T, M.white); w(-1.3, 1.3, 7.75, Y_TOP, T, M.white);
-  w(-1.3, 1.3, 0.02, 3.2, 0.03, M.glass); w(-1.3, 1.3, 0.02, 3.2, 0.032, M.dots);
-  w(-1.3, 1.3, 4.95, 7.75, 0.03, M.glass);
-  for (const x of [-1.3, -0.5, 0.5, 1.3]) w(x - 0.035, x + 0.035, 0, 3.2, 0.1, M.white);
-  w(-1.3, 1.3, 2.45, 2.52, 0.1, M.white); w(-1.3, 1.3, 3.13, 3.2, 0.1, M.white);
-  for (const x of [-1.3, 0, 1.3]) w(x - 0.04, x + 0.04, 4.95, 7.75, 0.09, M.frame);
-  rod(new THREE.Vector3(0.38, 0.95, -0.08), new THREE.Vector3(0.38, 1.25, -0.08), 0.015, M.grey, g);
-  hang(TX.vr, 1.05, 3.1, -1.9, 1.9, -0.18, 0, -1, g);       // VR banner on the left corner (seen from inside: right of the door)
-  hang(TX.girl, 1.05, 3.1, 1.9, 1.9, -0.18, 0, -1, g);      // FARI banner on the right corner (seen from inside: left of the door)
+  const DH = Y_MEZZ - 0.5, U0 = Y_MEZZ + 0.95, U1 = Y_MEZZ + 2.3, YB = Y_MEZZ + 0.25, ZO = T / 2 + 0.03;
+  w(-2.5, -PW, 0, DH, T, M.white); w(PW, 2.5, 0, DH, T, M.white);
+  w(-2.5, 2.5, DH, U0, T, M.white); w(-2.5, 2.5, U1, Y_TOP, T, M.white);
+  w(-PW, -DW, 0.02, DH, 0.03, M.glass); w(DW, PW, 0.02, DH, 0.03, M.glass); w(-DW, DW, 2.36, DH, 0.03, M.glass);
+  for (const x of [-PW, -DW, DW, PW]) w(x - 0.03, x + 0.03, 0, DH, 0.09, M.frame);
+  w(-PW, PW, DH - 0.08, DH, 0.09, M.frame); w(-DW, DW, 2.3, 2.36, 0.09, M.frame);
+  {
+    const N = 260, shards = new THREE.InstancedMesh(new THREE.BoxGeometry(0.06, 0.012, 0.045), M.shard, N);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    for (let i = 0; i < N; i++) {
+      const pile = i < 170, r = Math.sqrt(rand()) * (pile ? 0.75 : 1.9), a = rand() * Math.PI * 2;
+      const z = clamp(-0.8 + Math.sin(a) * r * 0.8, -(PV - 0.35), -0.08), hw = PORCH_IN + (PORCH_OUT - PORCH_IN) * (PV + z) / PV - 0.12;   // stay inside the splayed walls
+      const x = clamp(0.45 + Math.cos(a) * r, -hw, hw);
+      const y = pile ? 0.012 + rand() * 0.1 * (1 - r / 0.75) : 0.012, tilt = pile ? 0.6 : 0.08, s = 0.5 + rand() * 1.3;
+      e.set((rand() - 0.5) * tilt, rand() * 6.28, (rand() - 0.5) * tilt); q.setFromEuler(e);
+      m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(s, 1, s)); shards.setMatrixAt(i, m4);
+    }
+    g.add(shards);
+    for (const dx of [0, 0.07]) rod(new THREE.Vector3(0.55 + dx, 0.11, -1.05), new THREE.Vector3(0.72 + dx, 0.11, -0.5), 0.011, M.grey, g);   // a door handle among the glass
+  }
+  // stone cladding outside, and three first-floor windows lettered ULB, FARI and VUB
+  w(-2.5, -PW, 0, DH, 0.04, M.stoneDark, ZO); w(PW, 2.5, 0, DH, 0.04, M.stoneDark, ZO);
+  w(-2.5, 2.5, DH, YB, 0.04, M.stoneDark, ZO); w(-2.5, 2.5, YB - 0.14, YB, 0.1, M.stoneDark, ZO + 0.03);
+  w(-2.5, 2.5, YB, U0, 0.04, M.stoneLight, ZO); w(-2.5, 2.5, U1, Y_TOP, 0.04, M.stoneLight, ZO);
+  const WX = [-1.5, 0, 1.5], WH = 0.55;
+  [-2.5, ...WX.flatMap(x => [x - WH, x + WH]), 2.5].forEach((x, i, arr) => {
+    if (i % 2) return;
+    w(x, arr[i + 1], U0, U1, T, M.white); w(x, arr[i + 1], U0, U1, 0.04, M.stoneLight, ZO);
+  });
+  WX.forEach((x, i) => {
+    w(x - WH, x + WH, U0, U1, 0.03, M.glass);
+    w(x - WH, x - WH + 0.05, U0, U1, 0.1, M.frame); w(x + WH - 0.05, x + WH, U0, U1, 0.1, M.frame);
+    w(x - WH, x + WH, U0, U0 + 0.05, 0.1, M.frame); w(x - WH, x + WH, U1 - 0.05, U1, 0.1, M.frame);
+    const lt = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), TX.letters[i]); lt.position.set(x, (U0 + U1) / 2 + 0.1, 0.03); g.add(lt);
+  });
   return g;
+}
+// The outer shell of the porch's sides: stone outside, plain white inside (hidden behind the splayed walls below).
+function porchWall(p1, s) {
+  const g = new THREE.Group(), T = 0.35, YB = Y_MEZZ + 0.25, x = p1[0], xo = x + s * (T / 2 + 0.025);
+  g.add(boxBetween(x, 0, x, PV, 0, Y_TOP, T, M.white));
+  g.add(boxBetween(xo, 0, xo, PV, 0, YB, 0.04, M.stoneDark)); g.add(boxBetween(xo, 0, xo, PV, YB, Y_TOP, 0.04, M.stoneLight));
+  return g;
+}
+// Inside the porch the side walls splay out from the inner glass screen (PORCH_IN either side of the middle) to the
+// street opening (PORCH_OUT). Left as you come in: the FARI lettering, right: "Bridging the gap between technology and
+// society", each beside a vertical light. The inner screen, which survived, is bowed: two angled glass panels and a flat
+// middle with the door, set PORCH_SAG back. The door stands open, so you can walk in from the porch.
+function innerEntrance() {
+  const g = new THREE.Group(); G.core.add(g);
+  const DH = Y_MEZZ - 0.5, YS = Y_MEZZ - 0.3, DT = 2.2, WI = PORCH_IN, WO = PORCH_OUT, SAG = PORCH_SAG;
+  const seg = (p, q, y0, y1, th, mat) => { const m = boxBetween(p[0], p[1], q[0], q[1], y0, y1, th, mat); g.add(m); return m; };
+  // splayed side walls with the texts and lights
+  for (const s of [-1, 1]) {
+    const a = [s * WI, 0], b = [s * WO, PV], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const nx = -s * PV / L, nz = (WO - WI) / L;                    // normal pointing into the porch
+    const at = (f, off) => [a[0] + (b[0] - a[0]) * f + nx * off, a[1] + (b[1] - a[1]) * f + nz * off];
+    seg(a, b, 0, YS, 0.12, M.white); colSeg(a, b, 0.12, 0, YS);
+    const t = at(0.6, 0.06); hang(s < 0 ? TX.vestFari : TX.vestBridge, 1.3, 1.65, t[0], 1.55, t[1], nx, nz, g);
+    const l = at(0.17, 0.1); box(0.07, 1.5, 0.07, M.lamp, l[0], 1.7, l[1], g);
+  }
+  // the bowed glass screen
+  const P = [[-WI, 0], [-0.5, -SAG], [0.5, -SAG], [WI, 0]];
+  seg([-2.5, 0], P[0], 0, YS, 0.2, M.white); seg(P[3], [2.5, 0], 0, YS, 0.2, M.white);
+  for (let i = 0; i < 3; i++) {
+    const y0 = i === 1 ? DT : 0.02;
+    seg(P[i], P[i + 1], y0, DH, 0.03, M.glass); seg(P[i], P[i + 1], y0, DH, 0.032, M.dots);
+    seg(P[i], P[i + 1], DH, YS, 0.2, M.white); seg(P[i], P[i + 1], DH - 0.07, DH, 0.1, M.white);
+  }
+  for (const p of P) box(0.07, DH, 0.07, M.white, p[0], DH / 2, p[1], g);
+  seg(P[1], P[2], DT - 0.07, DT, 0.1, M.white);
+  colSeg([-2.5, 0], P[0], 0.12, 0, YS); colSeg(P[0], P[1], 0.12, 0, YS); colSeg(P[2], P[3], 0.12, 0, YS); colSeg(P[3], [2.5, 0], 0.12, 0, YS);
+  const leaf = new THREE.Group(); leaf.position.set(-0.46, 0, -SAG - 0.04); leaf.rotation.y = 1.5; g.add(leaf);
+  box(0.92, DT - 0.1, 0.03, M.glass, 0.46, (DT - 0.1) / 2 + 0.02, 0, leaf); box(0.92, DT - 0.1, 0.032, M.dots, 0.46, (DT - 0.1) / 2 + 0.02, 0, leaf);
+  for (const lx of [0.02, 0.9]) box(0.05, DT - 0.1, 0.05, M.white, lx, (DT - 0.1) / 2 + 0.02, 0, leaf);
+  box(0.92, 0.05, 0.05, M.white, 0.46, 0.045, 0, leaf); box(0.92, 0.05, 0.05, M.white, 0.46, DT - 0.1, 0, leaf);
+  box(0.03, 0.3, 0.08, M.grey, 0.84, 1.05, 0, leaf);
+  hang(TX.vr, 1.05, 2.7, -1.9, 1.5, -0.11, 0, -1, g);      // VR banner on the left corner (seen from inside: right of the door)
+  hang(TX.girl, 1.05, 2.7, 1.9, 1.5, -0.11, 0, -1, g);     // FARI banner on the right corner (seen from inside: left of the door)
+  flat([[-WI, 0.05], [WI, 0.05], [WO - 0.1, PV - 0.2], [-WO + 0.1, PV - 0.2]], 0.006, std({ color: 0x2b2b2e, roughness: 1 }), g);   // the dark entrance mat
 }
 let area2 = 0;
 FOOT.forEach((p, i) => { const q = FOOT[(i + 1) % FOOT.length]; area2 += p[0] * q[1] - q[0] * p[1]; });
 FOOT.forEach((p1, i) => {
   const p2 = FOOT[(i + 1) % FOOT.length];
-  const ext = EXTERIOR.has(i), ent = i === ENTRANCE_EDGE;
-  const g = ent ? entranceWall() : ext ? exteriorWall(p1, p2) : interiorWall(p1, p2);
+  const ext = EXTERIOR.has(i), ent = i === ENTRANCE_EDGE, porch = PORCH_SIDES.has(i);
+  const inward = i === 0 ? IN_R : IN_L;
+  const g = ent ? entranceWall() : porch ? porchWall(p1, i === 8 ? -1 : 1) : ext ? exteriorWall(p1, p2, inward) : interiorWall(p1, p2, WALL_OPENINGS[i]);
+  if (ext) colSeg([p1[0] + inward[0] * BENCH_OFF, p1[1] + inward[1] * BENCH_OFF], [p2[0] + inward[0] * BENCH_OFF, p2[1] + inward[1] * BENCH_OFF], BENCH_D, -MR_STEP, BENCH_H);
   const mx = (p1[0] + p2[0]) / 2, mz = (p1[1] + p2[1]) / 2;
   const L = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), dx = (p2[0] - p1[0]) / L, dz = (p2[1] - p1[1]) / L;
   const [nx, nz] = area2 > 0 ? [dz, -dx] : [-dz, dx];   // outward normal
   G.core.add(g); perimeter.push({ g, mx, mz, nx, nz });
-  colSeg(p1, p2, ext || ent ? 0.37 : 0.25, 0, Y_TOP);
+  const op = WALL_OPENINGS[i], th = ext || ent || porch ? 0.37 : 0.25;
+  if (!op) colSeg(p1, p2, th, 0, Y_TOP);
+  else { const [a, b] = openingEnds(p1, p2, op); colSeg(p1, p2, th, 0, op.y0); colSeg(p1, a, th, op.y0, Y_TOP); colSeg(b, p2, th, op.y0, Y_TOP); }
 });
+innerEntrance();
+
+// ---------- Meeting room 1: lowered floor, step and ramp ----------
+{
+  const g = G.core, y = -MR_STEP, [a, , , w] = MR_LOW, [r0, r1, r2, r3] = MR_RAMP;
+  const lg = new THREE.ShapeGeometry(shapeOf(MR_LOW)); lg.rotateX(-Math.PI / 2);
+  const low = new THREE.Mesh(lg, M.floor); low.position.y = y; low.receiveShadow = true; g.add(low);
+  const edge = std({ color: 0xd2d2d2, map: concreteTex, roughness: 0.6, side: THREE.DoubleSide });
+  const tris = pts => {   // flat triangles from [x, y, z] corners, textured like the floor
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts.flat(), 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(pts.flatMap(p => [p[0], -p[2]]), 2));
+    geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, edge); m.receiveShadow = true; g.add(m);
+  };
+  const P = ([x, z], h) => [x, h, z];
+  g.add(boxBetween(a[0], a[1], r0[0], r0[1], y, 0, 0.03, edge));                       // riser of the step
+  tris([P(r0, 0), P(r1, 0), P(r2, y), P(r0, 0), P(r2, y), P(r3, y)]);                 // ramp
+  tris([P(r0, 0), P(r3, y), P(r0, y)]);                                               // open side of the ramp
+  // the walls around the room continue down to the lowered floor
+  perimeter[0].g.add(boxBetween(a[0], a[1], R_END[0], R_END[1], y, 0, 0.35, M.white));
+  perimeter[1].g.add(boxBetween(R_END[0], R_END[1], M_END[0], M_END[1], y, 0, 0.25, M.plaster));
+  perimeter[2].g.add(boxBetween(M_END[0], M_END[1], w[0], w[1], y, 0, 0.25, M.plaster));
+}
 
 // ---------- atrium: entrance pillars, arch wall, lamp ----------
 // two leaning pillars frame the door, each with an LED line on the face towards the atrium
-for (const s of [-1, 1]) {
-  const p = box(0.55, Y_CEIL, 0.8, M.white, s * 1.1, Y_CEIL / 2, -0.7, G.core); p.rotation.z = s * 0.045; p.castShadow = true;
-  box(0.03, Y_CEIL - 0.3, 0.03, M.led, -s * 0.286, 0, -0.405, p);
-  colBox(s * 1.1, -0.7, 0.62, 0.8, 0, 0, Y_CEIL);
+// The entrance portal stands on the front edge of the void: two pillars that widen towards the ceiling,
+// and between them a wall with a rounded opening above the bridge. The door sits back behind the pillars.
+{
+  const PX = xr(ZV), PD = 0.7, wAt = y => 0.6 + 0.35 * y / Y_CEIL;
+  for (const s of [-1, 1]) {
+    const sh = new THREE.Shape();
+    sh.moveTo(-wAt(0) / 2, 0); sh.lineTo(wAt(0) / 2, 0); sh.lineTo(wAt(Y_CEIL) / 2, Y_CEIL); sh.lineTo(-wAt(Y_CEIL) / 2, Y_CEIL); sh.closePath();
+    const p = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: PD, bevelEnabled: false }), M.white);
+    p.position.set(s * PX, 0, ZV); p.castShadow = true; G.core.add(p);
+    const e = y => s * (PX - wAt(y) / 2 + 0.2);   // LED line on the atrium face, parallel to the inner edge
+    rod(new THREE.Vector3(e(0.15), 0.15, ZV - 0.012), new THREE.Vector3(e(Y_CEIL - 0.3), Y_CEIL - 0.3, ZV - 0.012), 0.016, M.led, G.core);
+    colBox(s * PX, ZV + PD / 2, 0.9, PD, 0, 0, Y_CEIL);
+  }
+  const HW = 0.8, top = Y_MEZZ + 2.7, r = 0.5, lo = Y_MEZZ + 0.02;
+  const ps = new THREE.Shape();
+  ps.moveTo(-PX, Y_MEZZ - 0.55); ps.lineTo(PX, Y_MEZZ - 0.55); ps.lineTo(PX, Y_CEIL); ps.lineTo(-PX, Y_CEIL); ps.closePath();
+  const h = new THREE.Path();
+  h.moveTo(-HW, lo); h.lineTo(HW, lo); h.lineTo(HW, top - r); h.quadraticCurveTo(HW, top, HW - r, top);
+  h.lineTo(-HW + r, top); h.quadraticCurveTo(-HW, top, -HW, top - r); h.closePath();
+  ps.holes.push(h);
+  const panel = new THREE.Mesh(new THREE.ExtrudeGeometry(ps, { depth: 0.3, bevelEnabled: false, curveSegments: 10 }), M.white);
+  panel.position.set(0, 0, ZV + 0.05); panel.castShadow = true; G.core.add(panel);
 }
 // the back wall of the atrium: two rounded arches at first-floor level, split by a pier that narrows towards the floor
 {
   const W = xr(ZA) - xl(ZA), mid = W / 2, BAND = Y_MEZZ - 0.35, half = y => 0.25 + 0.054 * y;
   const s = new THREE.Shape();
-  s.moveTo(mid - half(0), 0); s.lineTo(mid + half(0), 0); s.lineTo(mid + half(BAND), BAND); s.lineTo(W, BAND);
-  s.lineTo(W, Y_CEIL); s.lineTo(0, Y_CEIL); s.lineTo(0, BAND); s.lineTo(mid - half(BAND), BAND); s.closePath();
-  const TOPA = 7.7, r = 0.8, lo = Y_MEZZ + 0.02;
+  const EW = 0.75;   // width of the piers at both ends of the wall, which run down to the floor
+  s.moveTo(mid - half(0), 0); s.lineTo(mid + half(0), 0); s.lineTo(mid + half(BAND), BAND); s.lineTo(W - EW, BAND);
+  s.lineTo(W - EW, 0); s.lineTo(W, 0); s.lineTo(W, Y_CEIL); s.lineTo(0, Y_CEIL); s.lineTo(0, 0); s.lineTo(EW, 0);
+  s.lineTo(EW, BAND); s.lineTo(mid - half(BAND), BAND); s.closePath();
+  const TOPA = Y_CEIL - 0.7, r = 0.8, lo = Y_MEZZ + 0.02;
   const arch = (outer, inner, sgn) => {
     const p = new THREE.Path();
     const iLo = mid + sgn * half(lo), iHi = mid + sgn * half(TOPA);
@@ -622,26 +869,34 @@ for (const s of [-1, 1]) {
     p.quadraticCurveTo(iHi, TOPA, iHi + sgn * r, TOPA); p.lineTo(outer - sgn * r, TOPA);
     p.quadraticCurveTo(outer, TOPA, outer, TOPA - r); p.closePath(); return p;
   };
-  s.holes.push(arch(0.32, 0, -1), arch(W - 0.32, 0, 1));
+  s.holes.push(arch(EW, 0, -1), arch(W - EW, 0, 1));
   const g = new THREE.ExtrudeGeometry(s, { depth: 0.35, bevelEnabled: false, curveSegments: 10 });
   const wall = new THREE.Mesh(g, M.white); wall.position.set(xl(ZA), 0, ZA - 0.175); wall.castShadow = true; G.core.add(wall);
   const X = u => xl(ZA) + u;
   colSeg([xl(ZA), ZA], [xr(ZA), ZA], 0.35, BAND, Y_CEIL);
   colSeg([X(mid), ZA], [X(mid), ZA], 0.6, 0, BAND);
+  colSeg([X(0.17), ZA], [X(EW - 0.17), ZA], 0.35, 0, BAND); colSeg([X(W - EW + 0.17), ZA], [X(W - 0.17), ZA], 0.35, 0, BAND);
+  // under the galleries the wall continues as a blue panel on each side: university logos towards the entrance,
+  // and on the right the big FARI wall towards Meeting room 1
+  for (const sgn of [-1, 1]) {
+    const cx = sgn * (xr(ZA) + 0.7), hgt = Y_MEZZ - 0.3;
+    const b = box(1.4, hgt, 0.4, [M.white, M.white, M.white, M.white, TX.ulb, sgn > 0 ? M.totem : M.blue], cx, hgt / 2, ZA, G.core);
+    b.castShadow = true; colBox(cx, ZA, 1.4, 0.4, 0, 0, hgt);
+  }
   // LED lines: both edges of the pier, and both ends of the wall
   for (const sgn of [-1, 1]) {
     rod(new THREE.Vector3(X(mid + sgn * (half(0.2) + 0.02)), 0.2, ZA + 0.19), new THREE.Vector3(X(mid + sgn * (half(Y_CEIL - 0.3) + 0.02)), Y_CEIL - 0.3, ZA + 0.19), 0.016, M.led, G.core);
-    box(0.03, Y_CEIL - 0.4, 0.03, M.led, X(sgn < 0 ? 0.05 : W - 0.05), Y_CEIL / 2, ZA + 0.19, G.core);
+    box(0.03, Y_CEIL - 0.4, 0.03, M.led, X(sgn < 0 ? 0.12 : W - 0.12), Y_CEIL / 2, ZA + 0.19, G.core);
   }
   // dotted glass balustrades in the arches
-  for (const [a, b] of [[0.35, mid - half(lo) - 0.03], [mid + half(lo) + 0.03, W - 0.35]]) {
+  for (const [a, b] of [[EW + 0.03, mid - half(lo) - 0.03], [mid + half(lo) + 0.03, W - EW - 0.03]]) {
     const pl = new THREE.Mesh(new THREE.PlaneGeometry(b - a, 1.1), M.dots);
     pl.position.set(X((a + b) / 2), Y_MEZZ + 0.55, ZA); G.mezz.add(pl);
   }
 }
 // star lamp: light tubes hung from a ring, in the middle of the void
 {
-  const lx = 0, lz = (ZV + ZA) / 2, ly = 6.7;
+  const lx = 0, lz = (ZV + ZA) / 2, ly = Y_CEIL - 1.4;
   const lamp = new THREE.Group(); lamp.position.set(lx, ly, lz); G.core.add(lamp);
   for (let i = 0; i < 3; i++) {
     const bar = new THREE.Group(); bar.rotation.y = i * Math.PI / 3; lamp.add(bar);
@@ -668,7 +923,38 @@ function railing(x1, z1, x2, z2, y0, parent, topMat = M.railWood, barMat = M.whi
 }
 railing(xl(ZV), ZV, xl(ZA + 0.2), ZA + 0.2, Y_MEZZ, G.mezz);           // left gallery
 railing(xr(ZV), ZV, xr(ZA + 0.2), ZA + 0.2, Y_MEZZ, G.mezz);           // right gallery
-railing(xl(ZV) + 0.05, ZV, xr(ZV) - 0.05, ZV, Y_MEZZ, G.mezz);          // bridge over the entrance, behind the pillars
+railing(-0.8, ZV + 0.2, 0.8, ZV + 0.2, Y_MEZZ, G.mezz);                 // bridge over the entrance, in the portal opening
+
+// the long sides of the void: a wall with one wide rounded opening per gallery and a solid corner at the back;
+// at the far end each gallery passes through a small arched doorway into the corridor behind the arch wall
+for (const s of [-1, 1]) {
+  const xe = z => s * xr(z), a = [xe(ZV), ZV], b = [xe(ZA), ZA], Ls = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const y0 = Y_MEZZ - 0.55, u0 = 0.45, u1 = Ls - 1.0, top = Y_CEIL - 0.45, r = 0.6, lo = Y_MEZZ + 0.02;
+  const sh = new THREE.Shape();
+  sh.moveTo(0, y0); sh.lineTo(Ls, y0); sh.lineTo(Ls, Y_CEIL); sh.lineTo(0, Y_CEIL); sh.closePath();
+  const h = new THREE.Path();
+  h.moveTo(u0, lo); h.lineTo(u1, lo); h.lineTo(u1, top - r); h.quadraticCurveTo(u1, top, u1 - r, top);
+  h.lineTo(u0 + r, top); h.quadraticCurveTo(u0, top, u0, top - r); h.closePath();
+  sh.holes.push(h);
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false, curveSegments: 10 }); geo.translate(0, 0, -0.15);
+  const grp = new THREE.Group(); grp.position.set(a[0], 0, a[1]); grp.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); G.core.add(grp);
+  const m = new THREE.Mesh(geo, M.white); m.castShadow = true; grp.add(m);
+  box(0.03, Y_CEIL - y0 - 0.25, 0.33, M.led, Ls - 0.5, (y0 + Y_CEIL) / 2, 0, grp);          // LED line on the solid corner
+  box(u1 - u0 - 2 * r, 0.02, 0.05, M.led, (u0 + u1) / 2, top - 0.011, 0, grp);               // and along the head of the opening
+  const at = u => [a[0] + (b[0] - a[0]) * u / Ls, a[1] + (b[1] - a[1]) * u / Ls];
+  colSeg(at(u1), b, 0.3, Y_MEZZ, Y_CEIL);
+  // doorway at the end of the gallery
+  const xa = Math.min(xe(ZA), s * (xFR(ZA) - 0.17)), xb = Math.max(xe(ZA), s * (xFR(ZA) - 0.17)), xc = (xa + xb) / 2, dw = 0.55, dh = 2.35;
+  const ds = new THREE.Shape();
+  ds.moveTo(xa, Y_MEZZ); ds.lineTo(xb, Y_MEZZ); ds.lineTo(xb, Y_CEIL); ds.lineTo(xa, Y_CEIL); ds.closePath();
+  const dp = new THREE.Path();
+  dp.moveTo(xc - dw, Y_MEZZ + 0.02); dp.lineTo(xc + dw, Y_MEZZ + 0.02); dp.lineTo(xc + dw, Y_MEZZ + dh - dw);
+  dp.absarc(xc, Y_MEZZ + dh - dw, dw, 0, Math.PI, false); dp.closePath();
+  ds.holes.push(dp);
+  const dm = new THREE.Mesh(new THREE.ExtrudeGeometry(ds, { depth: 0.2, bevelEnabled: false, curveSegments: 12 }), M.white);
+  dm.position.z = ZA - 0.1; G.mezz.add(dm);
+  colSeg([xa, ZA], [xc - dw, ZA], 0.2, Y_MEZZ, Y_CEIL, 'mezz'); colSeg([xc + dw, ZA], [xb, ZA], 0.2, Y_MEZZ, Y_CEIL, 'mezz');
+}
 
 // ---------- first floor behind the arch wall: corridor, Annemie (left) | red landing | FARI office (right) ----------
 function glassWall(a, b, door = null) {
@@ -693,55 +979,73 @@ glassWall([SB_X1, ZR], [xFR(ZR) - 0.18, ZR], [0.35, 1.25]);            // FARI o
 for (const x of [(xFL(ZR) + SB_X0) / 2 - 0.3, SB_X1 + 2.2]) {           // FARI OFFICE lettering on both glass fronts
   const m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.6), TX.logo); m.position.set(x, Y_MEZZ + 1.85, ZR + 0.02); G.mezz.add(m);
 }
-// the red landing at the top of the stair, open to the corridor
+// the red landing at the top of the stair, open to the corridor. Its side walls run from the glass fronts of
+// Annemie and the office back to the turned mouth of the niche.
 {
   const lw = new THREE.Group(); G.mezz.add(lw);
-  const wall = (x, z0, z1, redSide) => {
-    lw.add(boxBetween(x, z0, x, z1, Y_MEZZ, Y_CEIL, 0.15, M.plaster)); colSeg([x, z0], [x, z1], 0.15, Y_MEZZ, Y_CEIL, 'mezz');
-    box(0.02, Y_CEIL - Y_MEZZ, Math.abs(z1 - z0), M.red, x + redSide * 0.085, (Y_MEZZ + Y_CEIL) / 2, (z0 + z1) / 2, lw);
+  const A0 = [SB_X0, ZR], A1 = [SB_X1, ZR];
+  const wall = (p, q, redSide, y0 = Y_MEZZ) => {   // a plaster wall from p to q, lined red on one side
+    const L = Math.hypot(q[0] - p[0], q[1] - p[1]), nx = -(q[1] - p[1]) / L * redSide * 0.085, nz = (q[0] - p[0]) / L * redSide * 0.085;
+    lw.add(boxBetween(p[0], p[1], q[0], q[1], y0, Y_CEIL, 0.15, M.plaster));
+    lw.add(boxBetween(p[0] + nx, p[1] + nz, q[0] + nx, q[1] + nz, y0, Y_CEIL, 0.02, M.red));
+    if (y0 === Y_MEZZ) colSeg(p, q, 0.15, Y_MEZZ, Y_CEIL, 'mezz');
   };
-  const D0 = -10.5, D1 = -11.4;                                      // doorway into Annemie
-  wall(SB_X0, ZR, D0, 1); wall(SB_X0, D1, SB_Z1, 1);
-  lw.add(boxBetween(SB_X0, D0, SB_X0, D1, Y_MEZZ + 2.2, Y_CEIL, 0.15, M.plaster));
-  box(0.02, Y_CEIL - Y_MEZZ - 2.2, D0 - D1, M.red, SB_X0 + 0.085, (Y_MEZZ + 2.2 + Y_CEIL) / 2, (D0 + D1) / 2, lw);
-  for (const z of [D0, D1]) box(0.17, 2.2, 0.05, M.frame, SB_X0, Y_MEZZ + 1.1, z, lw);
-  wall(SB_X1, ZR, SB_Z1, -1);
+  const onLW = z => [A0[0] + (NF_L[0] - A0[0]) * (z - ZR) / (NF_L[1] - ZR), z];   // a point on the left wall
+  const d0 = onLW(-10.5), d1 = onLW(-11.4);                           // doorway into Annemie
+  wall(A0, d0, 1); wall(d1, NF_L, 1); wall(d0, d1, 1, Y_MEZZ + 2.2);
+  for (const d of [d0, d1]) box(0.17, 2.2, 0.05, M.frame, d[0], Y_MEZZ + 1.1, d[1], lw);
+  wall(A1, NF_R, -1);
   lw.add(boxBetween(SB_X0, ZR, SB_X1, ZR, Y_MEZZ + 2.7, Y_CEIL, 0.15, M.white));   // lintel over the opening
-  const rf = new THREE.Mesh(new THREE.PlaneGeometry(SB_X1 - SB_X0, ZR - SB_Z1), M.red);
-  rf.rotation.x = -Math.PI / 2; rf.position.set((SB_X0 + SB_X1) / 2, Y_MEZZ + 0.008, (ZR + SB_Z1) / 2); lw.add(rf);
-  const rc = new THREE.Mesh(new THREE.PlaneGeometry(SB_X1 - SB_X0, SB_Z0 - ZR), M.red);
-  rc.rotation.x = Math.PI / 2; rc.position.set((SB_X0 + SB_X1) / 2, Y_CEIL - 0.01, (ZR + SB_Z0) / 2); lw.add(rc);
+  flat([A0, A1, NF_R, NF_L], Y_MEZZ + 0.008, M.red, lw);
+  flat([A0, A1, NF_R, NF_L], Y_CEIL - 0.01, M.red, lw, false);
   hang(TX.sign, 0.42, 0.42, SB_X0 + 0.1, Y_MEZZ + 1.6, -9.85, 1, 0, lw);
   extinguisher(SB_X0 + 0.16, Y_MEZZ, -10.15, lw);
-  railing(SB_X0 + 0.1, SB_Z1, DOWN[0], SB_Z1, Y_MEZZ, G.mezz, M.brass, M.iron);   // edge of the stairwell
+  // inside the niche: its ceiling, the strip along the left wall to the kitchen door, the floor at the front
+  // where the second flight arrives, and the railing around the stairwell
+  inNiche(() => {
+    const nw = nicheGroup(G.mezz);
+    flat([[SB_X0, SB_Z1], [SB_X1, SB_Z1], [SB_X1, SB_Z0], [SB_X0, SB_Z0]], Y_CEIL - 0.01, M.red, nw, false);
+    for (const [x0, x1, zb] of [[SB_X0, XK, ZK], [XK, SB_X1, ZW]]) {
+      const pts = [[x0, SB_Z1], [x1, SB_Z1], [x1, zb], [x0, zb]];
+      flat(pts, Y_MEZZ + 0.008, M.red, nw); flat(pts, Y_MEZZ - 0.305, M.red, nw, false);
+    }
+    box(0.02, 0.31, ZW - ZK, M.red, XK, Y_MEZZ - 0.15, (ZW + ZK) / 2, nw);
+    box(XK - SB_X0, 0.31, 0.02, M.red, (SB_X0 + XK) / 2, Y_MEZZ - 0.15, ZK, nw);
+    box(SB_X1 - XK, 0.31, 0.02, M.red, (XK + SB_X1) / 2, Y_MEZZ - 0.15, ZW, nw);
+    door(SB_X0 + 0.16, Y_MEZZ, SB_Z1 - 1.9, FACE(1, 0), nw, M.doorWhite);            // door to the kitchen
+    railing(XK, ZW, SB_X1 - 0.92, ZW, Y_MEZZ, nw, M.brass, M.iron);
+    railing(XK, ZW, XK, ZK, Y_MEZZ, nw, M.brass, M.iron);
+    railing(XK, ZK, SB_X0 + 0.1, ZK, Y_MEZZ, nw, M.brass, M.iron);
+  });
 }
 // meeting room Annemie: table, grey chairs, whiteboard, screen, cupboards and the blue banner
 {
   const g = G.mezz, y = Y_MEZZ;
-  meetingTable(-4.55, y, -10.9, 2.2, 1.1, g, 'mezz', M.greyChair);
+  meetingTable(ANNEMIE[0], y, ANNEMIE[1], 2.0, 1.0, g, 'mezz', M.greyChair);
   box(1.5, 1.0, 0.04, M.whiteboard, xFL(-9.65) + 0.75, y + 1.45, -9.65, g, -0.35);
   box(0.04, 1.0, 0.04, M.grey, xFL(-9.65) + 0.75, y + 0.5, -9.65, g);
-  box(0.9, 0.55, 0.05, M.black, -3.7, y + 1.45, -12.2, g, 0.32);
-  box(0.06, 1.2, 0.06, M.black, -3.7, y + 0.6, -12.16, g);
-  box(0.6, 2.1, 1.2, M.white, SB_X0 - 0.42, y + 1.05, -9.85, g);
-  const wdx = L_END[0] - SB_X0, wdz = L_END[1] - SB_Z1, wl = Math.hypot(wdx, wdz), nx = -wdz / wl, nz = wdx / wl;
-  const bx = SB_X0 + wdx / wl * 1.8, bz = SB_Z1 + wdz / wl * 1.8;
+  box(0.9, 0.55, 0.05, M.black, -5.25, y + 1.45, -11.15, g, 0.6);
+  box(0.06, 1.2, 0.06, M.black, -5.27, y + 0.6, -11.18, g);
+  box(0.45, 2.1, 1.0, M.white, SB_X0 - 0.33, y + 1.05, -9.8, g); colBox(SB_X0 - 0.33, -9.8, 0.45, 1.0, 0, y, y + 2.1, 'mezz');
+  const wdx = L_END[0] - NF_L[0], wdz = L_END[1] - NF_L[1], wl = Math.hypot(wdx, wdz), nx = -wdz / wl, nz = wdx / wl;
+  const bx = NF_L[0] + wdx / wl * 2.3, bz = NF_L[1] + wdz / wl * 2.3;
   hang(TX.annemie, 2.1, 1.4, bx - nx * 0.14, y + 1.9, bz - nz * 0.14, -nx, -nz, g);
 }
-// FARI office: rows of desks, the long blue banner at the far end, pink posters, doors to a cupboard and the kitchen
+// FARI office: three desk islands one behind the other, the long blue banner at the far end, pink posters,
+// doors to a cupboard and a store room, and at the far end the door to the kitchen corridor
 {
   const g = G.mezz, y = Y_MEZZ;
-  for (const t of [11.3, 13.5, 15.7, 17.9]) deskPair(...onR(t, 2.9), y, ALONG_R, g);
-  const [ex, ez] = onR(19.1 - 0.14, 3.0);
-  hang(TX.office, 4.6, 1.75, ex, y + 2.1, ez, -SIN, COS, g);
+  for (const t of [10.8, 13.95, 17.1]) deskIsland(...onR(t, 2.35), y, FACE(SIN, -COS), g);
+  const [ex, ez] = onR(19.1 - 0.14, 2.6);
+  hang(TX.office, 4.3, 1.64, ex, y + 2.1, ez, -SIN, COS, g);
   // inner wall (towards Meeting room 1 below): posters, kitchen door, plant
-  const a = [SB_X1, SB_Z1], b = M_END, L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+  const a = NF_R, b = M_END, L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
   const nx = -uz, nz = ux, at = (f, off = 0.14) => [a[0] + ux * L * f + nx * off, a[1] + uz * L * f + nz * off];
-  const p1 = at(0.22), p2 = at(0.42), kd = at(0.82, 0.13), pl = at(0.08, 0.5);
+  const p1 = at(0.22), p2 = at(0.42), pl = at(0.08, 0.5);
   hang(TX.pink1, 1.1, 1.45, p1[0], y + 1.9, p1[1], nx, nz, g);
   hang(TX.pink2, 0.8, 1.2, p2[0], y + 1.9, p2[1], nx, nz, g);
-  door(kd[0], y, kd[1], FACE(nx, nz), g, M.doorWhite, true);
   plant(pl[0], y, pl[1], g);
+  kitchenCorridor();
   // two doors on the wall beside the landing (a cupboard and a store room)
   door(SB_X1 + 0.09, y, -10.2, FACE(1, 0), g, M.doorWhite);
   door(SB_X1 + 0.09, y, -11.5, FACE(1, 0), g, M.doorWhite);
@@ -751,32 +1055,36 @@ for (const x of [(xFL(ZR) + SB_X0) / 2 - 0.3, SB_X1 + 2.2]) {           // FARI 
 // the wall with the door to the robotics workshop, a rounded corner, the red stair niche, and a curved wall into Meeting room 1
 {
   const g = G.core;
-  const wdx = L_END[0] - SB_X0, wdz = L_END[1] - SB_Z1, wl = Math.hypot(wdx, wdz), ux = wdx / wl, uz = wdz / wl, nx = -uz, nz = ux;
-  const atW = (d, off) => [SB_X0 + ux * d - nx * off, SB_Z1 + uz * d - nz * off];
-  const dp = atW(1.4, 0.13);
+  const wdx = L_END[0] - NF_L[0], wdz = L_END[1] - NF_L[1], wl = Math.hypot(wdx, wdz), ux = wdx / wl, uz = wdz / wl, nx = -uz, nz = ux;
+  const atW = (d, off) => [NF_L[0] + ux * d - nx * off, NF_L[1] + uz * d - nz * off];
+  const dp = atW(1.15, 0.13);
   door(dp[0], 0, dp[1], FACE(-nx, -nz), g, M.doorWhite);
   const sg = atW(0.45, 0.14); hang(TX.sign, 0.42, 0.42, sg[0], 1.6, sg[1], -nx, -nz, g);
-  cyl(0.36, 0.36, Y_MEZZ - 0.3, M.white, SB_X0 - 0.05, (Y_MEZZ - 0.3) / 2, SB_Z1 + 0.22, g, 28).castShadow = true;
-  colSeg([SB_X0 - 0.05, SB_Z1 + 0.22], [SB_X0 - 0.05, SB_Z1 + 0.22], 0.72, 0, Y_MEZZ - 0.3);
-  cyl(0.4, 0.4, Y_MEZZ - 0.3, M.white, SB_X1 + 0.12, (Y_MEZZ - 0.3) / 2, SB_Z1 + 0.22, g, 28).castShadow = true;
-  colSeg([SB_X1 + 0.12, SB_Z1 + 0.22], [SB_X1 + 0.12, SB_Z1 + 0.22], 0.8, 0, Y_MEZZ - 0.3);
-  const mt = atW(2.7, 0.55); marbleTable(mt[0], mt[1], FACE(-nx, -nz), G.furn, 1.5, 0.7);
-  const cr = atW(3.7, 1.1); coatRack(cr[0], cr[1], FACE(-nx, -nz) + 0.3, G.furn);
+  // the two rounded corners at the mouth of the niche
+  for (const [lx, r] of [[SB_X0 - 0.05, 0.36], [SB_X1 + 0.12, 0.4]]) {
+    const c = NT([lx, SB_Z1 + 0.22]);
+    cyl(r, r, Y_MEZZ - 0.3, M.white, c[0], (Y_MEZZ - 0.3) / 2, c[1], g, 28).castShadow = true;
+    colSeg(c, c, 2 * r, 0, Y_MEZZ - 0.3);
+  }
+  const mt = atW(2.9, 0.55); marbleTable(mt[0], mt[1], FACE(-nx, -nz), G.furn, 1.5, 0.7);
+  const cr = atW(4.5, 0.9); coatRack(cr[0], cr[1], FACE(-nx, -nz) + 0.3, G.furn);
 }
 
 // ---------- red staircase ----------
-// Seen from the atrium the niche is open and red all over. On the left the stair climbs away from you,
-// turns right in a half circle and comes back to the landing upstairs. On the right a short flight goes down to the back door.
-{
-  const st = new THREE.Group(); G.core.add(st);
+// Seen from the atrium the niche is open and red all over. On the left the stair climbs away from you to a half
+// landing across the back and comes back along the right wall to the landing upstairs. Under the second flight a
+// short flight goes down to the back door. All of it is built in the niche frame (see NT).
+inNiche(() => {
+  const st = nicheGroup(G.core);
   const BX0 = SB_X0, BZ0 = SB_Z0, BX1 = SB_X1, BZ1 = SB_Z1, IN = 0.135;
   // red linings on the three walls and the ceiling
   // (added to the wall they line, so the cut-away view hides them together)
-  box(0.02, Y_CEIL, BZ1 - BZ0, M.red, BX0 + IN, Y_CEIL / 2, (BZ0 + BZ1) / 2, perimeter[5].g);
-  box(0.02, Y_CEIL, BZ1 - BZ0, M.red, BX1 - IN, Y_CEIL / 2, (BZ0 + BZ1) / 2, perimeter[3].g);
-  box(BX1 - BX0, Y_CEIL, 0.02, M.red, (BX0 + BX1) / 2, Y_CEIL / 2, BZ0 + IN, perimeter[4].g);
-  const rf = new THREE.Mesh(new THREE.PlaneGeometry(BX1 - BX0, BZ1 - BZ0), M.red);
-  rf.rotation.x = -Math.PI / 2; rf.position.set((BX0 + BX1) / 2, 0.006, (BZ0 + BZ1) / 2); rf.receiveShadow = true; st.add(rf);
+  box(0.02, Y_CEIL, BZ1 - BZ0, M.red, BX0 + IN, Y_CEIL / 2, (BZ0 + BZ1) / 2, nicheGroup(perimeter[5].g));
+  box(0.02, Y_CEIL, BZ1 - BZ0, M.red, BX1 - IN, Y_CEIL / 2, (BZ0 + BZ1) / 2, nicheGroup(perimeter[3].g));
+  box(BX1 - BX0, Y_CEIL, 0.02, M.red, (BX0 + BX1) / 2, Y_CEIL / 2, BZ0 + IN, nicheGroup(perimeter[4].g));
+  const rfs = shapeOf([[BX0, BZ0], [BX1, BZ0], [BX1, BZ1], [BX0, BZ1]]); rfs.holes.push(rectPath(DOWN));   // open above the flight down
+  const rfg = new THREE.ShapeGeometry(rfs); rfg.rotateX(-Math.PI / 2);
+  const rf = new THREE.Mesh(rfg, M.red); rf.position.y = 0.006; rf.receiveShadow = true; st.add(rf);
   // the flight down: steps into a pit, a short red corridor and the back door
   {
     const [x0, z0, x1, z1] = DOWN, w = x1 - x0, cx = (x0 + x1) / 2, n = 6, run = 0.33, rise = 0.18;
@@ -791,41 +1099,43 @@ for (const x of [(xFL(ZR) + SB_X0) / 2 - 0.3, SB_X1 + 2.2]) {           // FARI 
     rod(new THREE.Vector3(x0 + 0.03, 0.9, z1), new THREE.Vector3(x0 + 0.03, 0.9, z0 + 0.4), 0.02, M.brass, st);
     for (let k = 0; k <= 6; k++) rod(new THREE.Vector3(x0 + 0.03, 0, z1 - k * (z1 - z0 - 0.4) / 6), new THREE.Vector3(x0 + 0.03, 0.9, z1 - k * (z1 - z0 - 0.4) / 6), 0.008, M.iron, st);
   }
-  // the stair up: along the left wall, a half turn at the back, back towards the landing
-  const XL = -2.3, XRt = -0.2, ZT = -15.35, RAD = (XRt - XL) / 2;
-  const pts = [[XL, -13.45], [XL, -14.4], [XL, ZT]];
-  for (let k = 1; k < 8; k++) { const a = Math.PI * k / 8; pts.push([XL + RAD - RAD * Math.cos(a), ZT - RAD * Math.sin(a)]); }
-  pts.push([XRt, ZT], [XRt, -14.4], [XRt, -13.35]);
-  const path = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)), false, 'centripetal');
-  const n = 24, rise = Y_MEZZ / n, SW = 0.9, run = path.getLength() / n, SL = run * 1.7;
-  for (let i = 0; i < n; i++) {
-    const u = (i + 0.5) / n, p = path.getPointAt(u), t = path.getTangentAt(u), top = (i + 1) * rise;
-    const th = top < 2.0 ? top : 0.25;   // upper steps float, so the space underneath stays open
-    const s = box(SL, th, SW, M.red, p.x, top - th / 2, p.z, st, -Math.atan2(t.z, t.x));
-    s.castShadow = true; s.receiveShadow = true;
-    const cx = p.x, cz = p.z, tx = t.x, tz = t.z;
-    SURF.push({
-      test: (x, z) => { const dx = x - cx, dz = z - cz; return Math.abs(dx * tx + dz * tz) <= SL / 2 && Math.abs(-dx * tz + dz * tx) <= SW / 2; },
-      top, bottom: top - th, grp: 'core',
-    });
+  // The stair up, as counted on site: 11 risers along the left wall to a half landing across the back,
+  // then 10 risers back along the right wall to the first floor. The first step lies about a metre inside the niche.
+  const XL = BX0 + 0.5, XRt = BX1 - 0.5, SW = 0.9, YL = N1 * RISE;
+  const tread = (cx, z0, z1, top, solid) => {   // the first flight is solid underneath, the second floats over the flight down
+    const th = solid ? top : 0.25, za = Math.min(z0, z1), zb = Math.max(z0, z1);
+    const s = box(SW, th, zb - za + 0.02, M.red, cx, top - th / 2, (za + zb) / 2, st); s.castShadow = true; s.receiveShadow = true;
+    SURF.push({ test: (x, z) => Math.abs(x - cx) <= SW / 2 && z >= za && z <= zb, top, bottom: top - th, grp: 'core' });
+  };
+  for (let i = 1; i < N1; i++) tread(XL, ZS - (i - 1) * RUN, ZS - i * RUN, i * RISE, true);
+  {
+    const x0 = BX0 + 0.05, x1 = BX1 - 0.05, zb = BZ0 + 0.05;
+    const s = box(x1 - x0, 0.25, ZLD - zb, M.red, (x0 + x1) / 2, YL - 0.125, (ZLD + zb) / 2, st); s.castShadow = true; s.receiveShadow = true;
+    SURF.push({ test: (x, z) => x >= x0 && x <= x1 && z >= zb && z <= ZLD, top: YL, bottom: YL - 0.25, grp: 'core' });
   }
-  // dark iron balusters with a brass handrail on the open side, a wall handrail on the other
-  const inner = [], outer = [];
-  for (let i = 0; i <= n; i++) {
-    const u = i / n, p = path.getPointAt(u), t = path.getTangentAt(u), rx = -t.z, rz = t.x, y = i * rise;
-    inner.push(new THREE.Vector3(p.x + rx * 0.42, y + 0.92, p.z + rz * 0.42));
-    outer.push(new THREE.Vector3(p.x - rx * 0.4, y + 0.85, p.z - rz * 0.4));
-    if (i < n) rod(new THREE.Vector3(p.x + rx * 0.42, y + rise, p.z + rz * 0.42), new THREE.Vector3(p.x + rx * 0.42, y + 0.92, p.z + rz * 0.42), 0.009, M.iron, st);
-  }
-  for (let i = 0; i < n; i++) colSeg([inner[i].x, inner[i].z], [inner[i + 1].x, inner[i + 1].z], 0.06, i * rise, i * rise + 1.0);
-  st.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(inner), 120, 0.028, 8), M.brass));
-  st.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(outer), 120, 0.02, 8), M.brass));
-}
+  for (let i = 1; i < N2; i++) tread(XRt, ZLD + (i - 1) * RUN, ZLD + i * RUN, YL + i * RISE, false);
+  // dark iron balusters with a brass handrail on the open side of each flight and along the landing edge,
+  // and a wall handrail on the other side
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const xi = XL + SW / 2 - 0.03, xj = XRt - SW / 2 + 0.03, HR = 0.92;
+  rod(V(xi, HR, ZS), V(xi, YL + HR, ZLD), 0.028, M.brass, st);
+  rod(V(xi, YL + HR, ZLD), V(xj, YL + HR, ZLD), 0.028, M.brass, st);
+  rod(V(xj, YL + HR, ZLD), V(xj, Y_MEZZ + HR, ZW), 0.028, M.brass, st);
+  rod(V(xi, 0, ZS), V(xi, HR, ZS), 0.02, M.iron, st);
+  for (let i = 1; i < N1; i++) { const z = ZS - (i - 0.5) * RUN, y = i * RISE; rod(V(xi, y, z), V(xi, y + HR - RISE / 2, z), 0.009, M.iron, st); }
+  for (let k = 0; k <= 5; k++) { const x = xi + (xj - xi) * k / 5; rod(V(x, YL, ZLD), V(x, YL + HR, ZLD), 0.009, M.iron, st); }
+  for (let i = 1; i < N2; i++) { const z = ZLD + (i - 0.5) * RUN, y = YL + i * RISE; rod(V(xj, y, z), V(xj, y + HR - RISE / 2, z), 0.009, M.iron, st); }
+  rod(V(BX0 + 0.2, 0.85, ZS), V(BX0 + 0.2, YL + 0.85, ZLD), 0.02, M.brass, st);
+  rod(V(BX1 - 0.2, YL + 0.85, ZLD), V(BX1 - 0.2, Y_MEZZ + 0.85, ZW), 0.02, M.brass, st);
+  colSeg([xi, ZS], [xi, ZLD], 0.06, 0, YL + 1.0);
+  colSeg([xi, ZLD], [xj, ZLD], 0.06, YL, YL + 1.0);
+  colSeg([xj, ZLD], [xj, ZW], 0.06, YL, Y_MEZZ + 1.0);
+});
 
 // ---------- mezzanine counters along the windows ----------
 function monitor(x, y, z, ry, parent) {
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
-  const scr = box(0.66, 0.4, 0.035, [M.black, M.black, M.black, M.black, M.screen, M.black], 0, 0.36, 0, g);
+  const scr = asScreen(box(0.66, 0.4, 0.035, [M.black, M.black, M.black, M.black, M.screen, M.black], 0, 0.36, 0, g), 0.66, 0.4);
   scr.rotation.x = -0.35;
   box(0.05, 0.25, 0.05, M.black, 0, 0.12, -0.06, g);
   box(0.42, 0.02, 0.15, M.black, 0, 0.29 - 0.28, 0.25, g);   // keyboard
@@ -843,8 +1153,9 @@ function counter(p, q, inward, parent, every = 1.9) {
   }
   colSeg(p, q, 0.62, Y_MEZZ, Y_MEZZ + 1.4, 'mezz');
 }
-counter(onL(0.9, 0.55), onL(8.1, 0.55), IN_L, G.mezz);
-counter(onR(0.9, 0.55), onR(8.1, 0.55), IN_R, G.mezz);
+counter(onL(2.6, 0.55), onL(7.3, 0.55), IN_L, G.mezz);
+counter(onR(2.6, 0.55), onR(7.3, 0.55), IN_R, G.mezz);
+counter([-1.9, PV - 0.5], [1.9, PV - 0.5], [0, -1], G.mezz, 1.3);        // under the ULB, FARI and VUB windows above the porch
 
 // ---------- furniture ----------
 function marbleTable(x, z, ry, parent, w = 1.7, d = 0.85, y = 0) {
@@ -859,7 +1170,7 @@ function marbleTable(x, z, ry, parent, w = 1.7, d = 0.85, y = 0) {
 }
 function exhibitTable(x, z, ry, parent) {   // marble table with a tilted touch screen and a small blue object
   const g = marbleTable(x, z, ry, parent, 1.9, 0.95);
-  const scr = box(0.62, 0.4, 0.03, [M.black, M.black, M.black, M.black, M.screen, M.black], 0.25, 1.08, 0.05, g); scr.rotation.x = -0.9;
+  const scr = asScreen(box(0.62, 0.4, 0.03, [M.black, M.black, M.black, M.black, M.screen, M.black], 0.25, 1.08, 0.05, g), 0.62, 0.4); scr.rotation.x = -0.9;
   box(0.22, 0.12, 0.22, M.blue, -0.55, 0.97, -0.1, g);
   return g;
 }
@@ -878,29 +1189,30 @@ function mannequin(x, z, ry, parent) {
   box(0.16, 0.22, 0.08, M.black, 0, 1.25, -0.15, g);
   colSeg([x, z], [x, z], 0.5, 0, 2.0, 'furn');
 }
-function screenStand(x, z, ry, parent, face = M.screen) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
+function screenStand(x, z, ry, parent, face = M.screen, y = 0) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
   box(0.6, 0.03, 0.45, M.black, 0, 0.015, 0, g);
   box(0.08, 1.35, 0.06, M.black, 0, 0.68, 0, g);
   const scr = box(1.35, 0.78, 0.06, [M.black, M.black, M.black, M.black, face, M.black], 0, 1.6, 0.04, g);
-  colBox(x, z, 1.35, 0.45, ry, 0, 2.0, 'furn');
+  if (face === M.screen) asScreen(scr, 1.35, 0.78);
+  colBox(x, z, 1.35, 0.45, ry, y, y + 2.0, 'furn');
   return scr;
 }
 function ceilScreen(x, z, ry, parent) {   // screen hung from the ceiling on a pole, facing the street
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
   cyl(0.03, 0.03, Y_MEZZ - 0.3 - 2.55, M.black, 0, (Y_MEZZ - 0.3 + 2.55) / 2, 0, g, 8);
-  box(1.0, 0.6, 0.06, [M.black, M.black, M.black, M.black, M.screen, M.black], 0, 2.3, 0.04, g);
+  asScreen(box(1.0, 0.6, 0.06, [M.black, M.black, M.black, M.black, M.screen, M.black], 0, 2.3, 0.04, g), 1.0, 0.6);
 }
 // photos shown on screens; each image is cropped to fill the screen, and opens with its caption on click
 const PHOTOS = [
   { src: 'assets/fari-directors-2024-07.jpg', caption: 'FARI directors - July 2024',
-    alt: 'Three people standing in front of a FARI banner reading AI for the Common Good Institute Brussels', at: [-4.5, -10.0, FACE(1, 0.6)] },
+    alt: 'Three people standing in front of a FARI banner reading AI for the Common Good Institute Brussels', at: [-3.7, -9.9, FACE(1, 0.6)] },
   { src: 'assets/royal-visit-2024-08.jpg', caption: 'Philippe, King of the Belgians, profoundly regretting his follow-up question. - August 2024',
     alt: 'King Philippe listening to a FARI researcher in a room with dark blue walls', at: [...onR(10.2, 3.6), FACE(-0.7, 1)] },
 ];
-function photoMaterial(src) {
+function photoMaterial(src, scrAspect = 1.35 / 0.78) {
   const tex = new THREE.TextureLoader().load(src, t => {
-    const imgAspect = t.image.width / t.image.height, scrAspect = 1.35 / 0.78;
+    const imgAspect = t.image.width / t.image.height;
     if (imgAspect < scrAspect) { t.repeat.set(1, imgAspect / scrAspect); t.offset.set(0, (1 - t.repeat.y) / 2); }
     else { t.repeat.set(scrAspect / imgAspect, 1); t.offset.set((1 - t.repeat.x) / 2, 0); }
   });
@@ -918,14 +1230,14 @@ function cityTable(x, z, ry, parent) {
     const hgt = 0.04 + rand() * 0.22, w = 0.12 + rand() * 0.06, d = 0.12 + rand() * 0.07;
     box(w, hgt, d, rand() < 0.1 ? M.blue : M.model, bx, 0.9 + hgt / 2, bz, g);
   }
-  const s = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.38), M.screen); s.rotation.x = -Math.PI / 2; s.position.y = 0.905; g.add(s);
+  const s = asScreen(new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.38), M.screen), 0.62, 0.38, null); s.rotation.x = -Math.PI / 2; s.position.y = 0.905; g.add(s);
   colBox(x, z, 2.7, 1.45, ry, 0, 1.2, 'furn');
 }
 function robotTable(x, z, ry, parent) {   // triangular wooden table with a touch screen and a white robot arm
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
   const top = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.07, 3), M.tableWood); top.position.y = 0.86; top.rotation.y = Math.PI / 2; g.add(top);
   for (const a of [0, 2.094, 4.189]) rod(new THREE.Vector3(Math.sin(a) * 0.6, 0, Math.cos(a) * 0.6), new THREE.Vector3(Math.sin(a) * 0.5, 0.84, Math.cos(a) * 0.5), 0.022, M.black, g);
-  const s = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), M.screen); s.rotation.x = -Math.PI / 2; s.position.set(0, 0.896, 0.2); g.add(s);
+  const s = asScreen(new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), M.screen), 0.62, 0.42, null); s.rotation.x = -Math.PI / 2; s.position.set(0, 0.896, 0.2); g.add(s);
   const arm = new THREE.Group(); arm.position.set(0, 0.9, -0.45); g.add(arm);
   cyl(0.1, 0.11, 0.14, M.mannequin, 0, 0.07, 0, arm);
   cyl(0.075, 0.075, 0.38, M.mannequin, 0, 0.33, 0, arm);
@@ -944,7 +1256,7 @@ function cartesianRig(x, z, ry, parent) {   // marble table with an aluminium ga
   box(1.84, 0.04, 0.04, M.grey, 0, 1.78, -0.35, g); box(0.04, 0.04, 0.7, M.grey, 0.2, 1.76, -0.02, g);
   box(0.12, 0.12, 0.12, M.mannequin, 0.2, 1.68, 0.3, g);
   cyl(0.06, 0.07, 0.4, M.mannequin, -0.5, 1.1, 0.1, g, 16);
-  const scr = box(0.8, 0.45, 0.03, [M.black, M.black, M.black, M.black, M.screen, M.black], 0.4, 1.05, 0.35, g); scr.rotation.x = -1.0;
+  const scr = asScreen(box(0.8, 0.45, 0.03, [M.black, M.black, M.black, M.black, M.screen, M.black], 0.4, 1.05, 0.35, g), 0.8, 0.45); scr.rotation.x = -1.0;
   for (const [dx, dz] of [[-0.2, 0.25], [0.0, 0.1], [-0.35, 0.3]]) box(0.11, 0.09, 0.11, M.grey, dx, 0.93, dz, g);
 }
 function rollup(x, z, ry, parent, mat = M.totem) {
@@ -968,17 +1280,81 @@ function ovalTable(x, y, z, len, wid, ry, parent, grp) {   // long table with ro
   }
   colBox(x, z, len, wid + 0.8, ry, y, y + 1.0, grp);
 }
-function deskPair(x, z, y, ry, parent) {   // two desks back to back with monitors and office chairs
+// A desk island as in the FARI office: four white desks pushed together two by two, one monitor on each (back to back
+// across the middle) and a black office chair at each desk. Local x runs across the room, local +z along it.
+// Its monitors are numbered row by row: first the -z row (window side, then aisle side), then the +z row.
+function deskIsland(x, z, y, ry, parent) {
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
-  box(1.6, 0.04, 1.6, M.white, 0, 0.74, 0, g);
-  for (const sx of [-0.75, 0.75]) for (const sz of [-0.75, 0.75]) box(0.04, 0.72, 0.04, M.grey, sx, 0.36, sz, g);
-  for (const s of [-1, 1]) {
-    monitor(0, 0.76, s * 0.2, s > 0 ? 0 : Math.PI, g);
-    const ch = new THREE.Group(); ch.position.set(0, 0, s * 1.1); g.add(ch);
-    box(0.5, 0.06, 0.48, M.black, 0, 0.48, 0, ch); box(0.5, 0.55, 0.05, M.black, 0, 0.8, s * 0.24, ch);
+  for (const sz of [-1, 1]) for (const sx of [-1, 1]) {
+    const cx = sx * 0.7, cz = sz * 0.4;
+    box(1.38, 0.03, 0.78, M.white, cx, 0.745, cz, g);
+    for (const lx of [-0.64, 0.64]) for (const lz of [-0.34, 0.34]) box(0.04, 0.73, 0.04, M.white, cx + lx, 0.365, cz + lz, g);
+    monitor(cx, 0.76, sz * 0.12, sz > 0 ? 0 : Math.PI, g);
+    const ch = new THREE.Group(); ch.position.set(cx, 0, sz * 1.05); g.add(ch);   // chairs half tucked in
+    box(0.5, 0.06, 0.48, M.black, 0, 0.48, 0, ch); box(0.5, 0.55, 0.05, M.black, 0, 0.8, sz * 0.24, ch);
     cyl(0.025, 0.025, 0.45, M.grey, 0, 0.23, 0, ch, 8); cyl(0.26, 0.26, 0.02, M.black, 0, 0.02, 0, ch, 5);
   }
-  colBox(x, z, 1.6, 2.6, ry, y, y + 1.2, 'mezz');
+  colBox(x, z, 2.8, 1.6, ry, y, y + 1.2, 'mezz');
+  for (const sz of [-1, 1]) colBox(x, z, 2.0, 0.5, ry, y, y + 1.2, 'mezz', 0, sz * 1.05);
+}
+// The kitchen behind the far end of the office is not modelled. The door to it is a closed aluminium glass door, and
+// the first metres behind it are built only for the view through the glass, after the photos: a short white corridor
+// with a curved wall on the right (fire hose cabinet, evacuation plans), an LED strip along the ceiling, a glass door
+// in the left wall, a dark glass door at the end, and a side passage to the right. You cannot walk in.
+function kitchenCorridor() {
+  const g = new THREE.Group(); G.mezz.add(g);
+  const Y = Y_MEZZ, CH = 2.75, op = KITCHEN_DOOR;
+  const [a, b] = openingEnds(FOOT[2], FOOT[3], op), C = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const f = [perimeter[2].nx, perimeter[2].nz], r = [-f[1], f[0]];          // into the corridor, and to its right
+  const kp = (x, z) => [C[0] + r[0] * x + f[0] * z, C[1] + r[1] * x + f[1] * z];
+  const wall = (p, q, y0, y1, mat = M.plaster, th = 0.12, solid = true) => {
+    g.add(boxBetween(p[0], p[1], q[0], q[1], Y + y0, Y + y1, th, mat));
+    if (solid) colSeg(p, q, th, Y + y0, Y + y1, 'mezz');
+  };
+  const at = (x, z, y, w, h, d, mat, facing) => { const p = kp(x, z); return box(w, h, d, mat, p[0], Y + y, p[1], g, FACE(...facing)); };
+  const L0 = -0.8, R0 = 1.0, ZE = 4.6, ZP = 3.4, XP = 2.2, WT = 0.125;   // left wall, right wall, end wall, side passage
+  const xr = z => R0 - 0.32 * Math.sin(Math.PI * Math.min(1, Math.max(0, (z - WT) / (ZP - WT))));   // the curved right wall
+  const outline = [kp(L0, -WT), kp(R0, -WT), kp(R0, ZP), kp(XP, ZP), kp(XP, ZE), kp(L0, ZE)];
+  flat(outline, Y + 0.004, M.floor, g); flat(outline, Y - 0.3, M.white, g, false);
+  flat(outline, Y + CH, M.white, g, false); flat(outline, Y + CH + 0.08, M.white, g);
+  // walls: left, curved right (closed outside by a straight skin), side passage, end
+  wall(kp(L0, WT), kp(L0, ZE), 0, CH);
+  for (let i = 0; i < 10; i++) { const z0 = WT + (ZP - WT) * i / 10, z1 = WT + (ZP - WT) * (i + 1) / 10; wall(kp(xr(z0), z0), kp(xr(z1), z1), 0, CH); }
+  wall(kp(R0 + 0.06, WT), kp(R0 + 0.06, ZP), 0, CH, M.plaster, 0.02, false);
+  wall(kp(R0, ZP), kp(XP, ZP), 0, CH); wall(kp(XP, ZP), kp(XP, ZE), 0, CH); wall(kp(L0, ZE), kp(XP, ZE), 0, CH);
+  // the door frame in the office wall, with the closed glass door in it
+  for (const x of [-op.w / 2, op.w / 2]) wall(kp(x, -WT - 0.01), kp(x, WT + 0.01), 0, op.h, M.grey, 0.05, false);
+  wall(kp(-op.w / 2, 0), kp(op.w / 2, 0), op.h - 0.05, op.h, M.grey, 0.27, false);
+  {
+    const hw = op.w / 2 - 0.03, zl = 0.03, l = kp(-hw, zl), rr = kp(hw, zl), along = s => kp(-hw + s, zl);
+    wall(l, rr, 0.02, op.h - 0.06, M.glass, 0.02, false);
+    for (const [s0, s1] of [[0, 0.07], [2 * hw - 0.07, 2 * hw]]) wall(along(s0), along(s1), 0.02, op.h - 0.06, M.grey, 0.05, false);
+    for (const [y0, y1] of [[0.02, 0.1], [op.h - 0.14, op.h - 0.06]]) wall(l, rr, y0, y1, M.grey, 0.05, false);
+    for (const side of [-1, 1]) { const h = kp(hw - 0.1, zl + side * 0.05); box(0.14, 0.03, 0.03, M.grey, h[0], Y + 1.05, h[1], g, FACE(...f)); }   // handles
+    colSeg(kp(-op.w / 2, 0), kp(op.w / 2, 0), 0.25, Y, Y + op.h, 'mezz');   // the door is shut
+  }
+  // glass door in the left wall, dark glass door with cork boards at the end, a dark doorway at the end of the passage
+  const doorPanel = (p, q, facing) => {   // an aluminium-framed door flat against a wall
+    wall(p, q, 0.02, 2.15, M.darkGlass, 0.03, false);
+    const ux = (q[0] - p[0]), uz = (q[1] - p[1]), L = Math.hypot(ux, uz), u = [ux / L, uz / L], o = (s, t) => [p[0] + u[0] * s + facing[0] * t, p[1] + u[1] * s + facing[1] * t];
+    for (const [s0, s1] of [[0, 0.06], [L - 0.06, L]]) wall(o(s0, 0.02), o(s1, 0.02), 0, 2.2, M.grey, 0.04, false);
+    wall(o(0, 0.02), o(L, 0.02), 2.15, 2.2, M.grey, 0.04, false);
+    const h = o(L - 0.12, 0.05); box(0.03, 0.03, 0.14, M.grey, h[0], Y + 1.05, h[1], g, FACE(...u));
+  };
+  doorPanel(kp(L0 + 0.07, 1.3), kp(L0 + 0.07, 2.2), r);
+  doorPanel(kp(-0.65, ZE - 0.07), kp(0.25, ZE - 0.07), f.map(v => -v));
+  doorPanel(kp(XP - 0.07, ZP + 0.2), kp(XP - 0.07, ZE - 0.25), r.map(v => -v));
+  for (const [x, y] of [[0.75, 1.75], [0.75, 1.35]]) at(x, ZE - 0.08, y, 0.5, 0.3, 0.02, M.cork, f.map(v => -v));
+  // on the curved wall: two evacuation plans and the fire hose cabinet
+  const inward = r.map(v => -v);
+  at(xr(1.6) - 0.07, 1.6, 1.95, 0.3, 0.4, 0.03, [M.white, M.white, M.white, M.white, TX.evac, M.white], inward);
+  at(xr(2.0) - 0.07, 2.0, 2.0, 0.42, 0.32, 0.03, [M.white, M.white, M.white, M.white, TX.evac, M.white], inward);
+  at(xr(2.0) - 0.1, 2.0, 1.2, 0.6, 0.85, 0.1, [M.redDoor, M.redDoor, M.redDoor, M.redDoor, TX.hose, M.redDoor], inward);
+  // the LED strip along the ceiling, following the curved wall into the side passage
+  const pts = [];
+  for (let i = 0; i <= 12; i++) { const z = WT + (ZP - WT) * i / 12, p = kp(xr(z) - 0.12, z); pts.push(new THREE.Vector3(p[0], Y + CH - 0.03, p[1])); }
+  for (const x of [R0 + 0.3, XP - 0.15]) { const p = kp(x, ZP + 0.12); pts.push(new THREE.Vector3(p[0], Y + CH - 0.03, p[1])); }
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.012, 6), M.led));
 }
 function door(x, y, z, ry, parent, mat, open = false) {   // a door leaf with frame, front facing ry
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
@@ -1005,6 +1381,13 @@ function coatRack(x, z, ry, parent) {
   for (let i = 0; i < 6; i++) box(0.02, 0.18, 0.36, M.black, -0.4 + i * 0.16, 1.5, 0, g);
   colBox(x, z, 1.2, 0.5, ry, 0, 1.7, 'furn');
 }
+const MANNEQUIN = [3.95, -8.65];
+function feltPanel(x, z, ry, parent) {   // free-standing grey felt partition
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; parent.add(g);
+  box(1.0, 1.85, 0.05, M.felt, 0, 0.98, 0, g);
+  for (const sx of [-0.4, 0.4]) box(0.05, 0.05, 0.4, M.grey, sx, 0.025, 0, g);
+  colBox(x, z, 1.0, 0.3, ry, 0, 1.9, 'furn');
+}
 function extinguisher(x, y, z, parent) {
   cyl(0.08, 0.08, 0.5, M.redDoor, x, y + 0.55, z, parent, 14);
 }
@@ -1019,41 +1402,40 @@ function lightCross(x, z, ry, parent) {   // the X-shaped light sculpture in the
   const F = G.furn;
   // along the right facade, from the entrance to Meeting room 1
   ceilScreen(...onR(1.7, 0.55), FACE(...IN_R.map(v => -v)), F);
-  cityTable(...onR(3.3, 1.35), ALONG_R, F);
-  marbleTable(...onR(1.4, 1.45), ALONG_R + 0.6, F, 1.2, 0.7);
-  robotTable(...onR(6.0, 1.5), ALONG_R, F);
-  exhibitTable(...onR(9.6, 1.1), ALONG_R, F);
-  mannequin(...onR(11.0, 1.7), FACE(-SIN, COS), F);
-  // the blue FARI wall at the mouth of Meeting room 1, and the welcome roll-up opposite it
+  cityTable(...onR(3.95, 1.4), ALONG_R, F);
+  marbleTable(...onR(1.75, 0.95), ALONG_R + 0.6, F, 0.9, 0.6);
+  robotTable(...onR(6.45, 1.5), ALONG_R, F);
+  // behind the blue FARI wall: an exhibit table at the window and the exoskeleton mannequin in front of the wall
+  exhibitTable(...onR(9.7, 1.15), ALONG_R, F);
+  mannequin(MANNEQUIN[0], MANNEQUIN[1], FACE(0.3, -1), F);
+  feltPanel(...onR(11.9, 0.95), ALONG_R + 0.15, F);
+  // the welcome roll-up beside the middle pier, turned towards Meeting room 1
+  rollup(1.05, -8.75, FACE(2.7, -4.8), F, TX.welcome);
+  // Meeting room 1 (everything standing on its floor sits one step lower)
+  const MY = -MR_STEP;
+  ovalTable(...(([x, z]) => [x, MY, z])(onR(15.8, 2.7)), 5.4, 1.2, ALONG_R, F, 'furn');
   {
-    const [bx, bz] = onR(12.2, 1.9), ry = FACE(-SIN, COS) - 0.35;
-    const w = box(1.3, Y_MEZZ - 0.3, 0.2, [M.white, M.white, M.white, M.white, M.totem, M.white], bx, (Y_MEZZ - 0.3) / 2, bz, G.core, ry);
-    w.castShadow = true; colBox(bx, bz, 1.3, 0.2, ry, 0, Y_MEZZ - 0.3);
-  }
-  rollup(...onR(11.9, 5.0), FACE(-SIN, COS) + 0.2, F, TX.welcome);
-  // Meeting room 1
-  ovalTable(...(([x, z]) => [x, 0, z])(onR(15.8, 3.0)), 5.4, 1.2, ALONG_R, F, 'furn');
-  {
-    const [vx, vz] = onR(19.1 - 0.14, 3.6);
-    hang(TX.vrMeeting, 1.9, 3.0, vx, 1.9, vz, -SIN, COS, G.core);
-    const [tx, tz] = onR(18.55, 3.4); screenStand(tx, tz, FACE(-SIN, COS), F);
+    const [vx, vz] = onR(19.1 - 0.14, 3.3);
+    hang(TX.vrMeeting, 1.7, 2.7, vx, 1.5 + MY, vz, -SIN, COS, G.core);
+    const [tx, tz] = onR(18.55, 3.1); screenStand(tx, tz, FACE(-SIN, COS), F, M.screen, MY);
     ceilScreen(...onR(17.6, 0.55), FACE(...IN_R.map(v => -v)), F);
     lightCross(...onR(14.0, 0.25), FACE(...IN_R), F);
-    const a = [SB_X1, SB_Z1], b = M_END, L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+    const a = NF_R, b = M_END, L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
     const nx = -uz, nz = ux, at = (f, off) => [a[0] + ux * L * f + nx * off, a[1] + uz * L * f + nz * off];
     const d1 = at(0.38, 0.13), d2 = at(0.78, 0.13), bn = at(0.6, 0.14);
-    door(d1[0], 0, d1[1], FACE(nx, nz), G.core, M.doorWhite);
-    door(d2[0], 0, d2[1], FACE(nx, nz), G.core, M.doorWhite);
-    hang(TX.brussels, 1.2, 3.0, bn[0], 1.75, bn[1], nx, nz, G.core);
+    door(d1[0], MY, d1[1], FACE(nx, nz), G.core, M.doorWhite);
+    door(d2[0], MY, d2[1], FACE(nx, nz), G.core, M.doorWhite);
+    hang(TX.brussels, 1.1, 2.7, bn[0], 1.5 + MY, bn[1], nx, nz, G.core);
   }
   // along the left facade, from the entrance towards the robotics workshop
   ceilScreen(...onL(1.7, 0.55), FACE(...IN_L.map(v => -v)), F);
-  cartesianRig(...onL(3.2, 1.4), ALONG_L + Math.PI, F);
+  cartesianRig(...onL(3.6, 1.45), ALONG_L + Math.PI, F);
   exhibitTable(...onL(6.4, 1.5), ALONG_L + Math.PI, F);
-  marbleTable(...onL(8.2, 1.3), ALONG_L + Math.PI + 0.3, F, 1.3, 0.75);
+  feltPanel(...onL(5.05, 0.9), ALONG_L + 0.5, F);
+  lightCross(...onL(6.6, 0.25), FACE(...IN_L), F);                    // the second light cross, in the left facade
   // in the atrium
   marbleTable(0.35, -7.15, 0.5, F, 0.9, 0.7);
-  for (const ph of PHOTOS) ph.screen = screenStand(...ph.at, F, photoMaterial(ph.src));
+  for (const ph of PHOTOS) { ph.screen = screenStand(...ph.at, F, photoMaterial(ph.src)); SHOTS.set(ph.screen, { photo: ph, face: 4 }); }
 }
 G.furn.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 
@@ -1134,7 +1516,11 @@ function placeScooter() {
 placeScooter();
 
 // ---------- environment & lights ----------
-const ground = new THREE.Mesh(new THREE.CircleGeometry(70, 64), new THREE.MeshStandardMaterial({ color: 0xd3dae4, roughness: 1 }));
+// the ground disc lies just under floor level, so it needs a hole where Meeting room 1 is lower
+const groundShape = new THREE.Shape(); groundShape.absarc(0, 0, 70, 0, Math.PI * 2, false);
+for (const poly of [MR_LOW, DOWN_W])
+  groundShape.holes.push(new THREE.Path(poly.map(([x, z]) => new THREE.Vector2(x - CX, -(z - CZ)))));
+const ground = new THREE.Mesh(new THREE.ShapeGeometry(groundShape, 64), new THREE.MeshStandardMaterial({ color: 0xd3dae4, roughness: 1 }));
 ground.rotation.x = -Math.PI / 2; ground.position.y = -0.03; ground.receiveShadow = true; scene.add(ground);
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8d939c, 1.5));
 scene.add(new THREE.AmbientLight(0xffffff, 0.35));
@@ -1145,37 +1531,13 @@ Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, n
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun);
 
-// ---------- labels ----------
-const LABELS = [
-  ['Atrium', 0, 2.8, -4.6, 'core'],
-  ['Entrance', 0, 3.4, -0.5, 'core'],
-  ['Red staircase', -1.25, 3.7, -13.4, 'core'],
-  ['Robotics workshop', -4.1, 2.6, -12.4, 'core'],
-  ['Meeting room 1', ...(() => { const p = onR(15.8, 3.0); return [p[0], 2.2, p[1]]; })(), 'core'],
-  ["Meeting room 'Annemie'", -4.5, 6.7, -10.9, 'mezz'],
-  ['FARI office', ...(() => { const p = onR(14.6, 3.0); return [p[0], 6.7, p[1]]; })(), 'mezz'],
-  ['Red landing', -1.25, 6.6, -11.2, 'mezz'],
-  ['Window desks', ...(() => { const p = onL(4.5, 0.6); return [p[0], 5.8, p[1]]; })(), 'mezz'],
-  ['City model', ...(() => { const p = onR(3.3, 1.35); return [p[0], 1.55, p[1]]; })(), 'furn'],
-  ['Robot arm', ...(() => { const p = onR(6.0, 1.5); return [p[0], 2.1, p[1]]; })(), 'furn'],
-  ['Exoskeleton demo', ...(() => { const p = onR(11.0, 1.7); return [p[0], 2.2, p[1]]; })(), 'furn'],
-  ['Photo · click to open', PHOTOS[0].at[0], 2.15, PHOTOS[0].at[1], 'furn'],
-  ['Photo · click to open', PHOTOS[1].at[0], 2.15, PHOTOS[1].at[1], 'furn'],
-  ["Carl's knee scooter · click to ride", SC.x, 1.25, SC.z, 'furn'],
-];
-const labelLayer = document.getElementById('labels');
-const labels = LABELS.map(([text, x, y, z, grp]) => {
-  const el = document.createElement('div'); el.className = 'lbl'; el.textContent = text; labelLayer.appendChild(el);
-  return { el, pos: P(x, y, z), grp };
-});
-
 // ---------- orbit views ----------
 const VIEWS = {
   overview: { pos: [-15, 21, 9], target: [1, 2, -9] },
   top: { pos: [1, 42, -9.4], target: [1, 0, -9.5] },
-  atrium: { pos: [0.2, 1.65, -1.9], target: [0, 5.2, -8] },
-  mezz: { pos: [-2.1, 5.85, -2.4], target: [2.6, 5.0, -9.5] },
-  stair: { pos: [-0.6, 1.7, -9.6], target: [-1.2, 2.4, -14.5] },
+  atrium: { pos: [0.2, 1.65, -2.6], target: [0, 4.6, -8] },
+  mezz: { pos: [-2.1, Y_MEZZ + 1.65, -2.7], target: [2.6, Y_MEZZ + 0.8, -9.5] },
+  stair: { pos: [0.1, 1.7, -9.4], target: (([x, z]) => [x, 2.2, z])(NT([-0.2, -15.5])) },
 };
 let tween = null;
 function goTo(name, instant = false) {
@@ -1189,7 +1551,7 @@ document.getElementById('views').addEventListener('click', e => { const b = e.ta
 controls.addEventListener('start', () => { tween = null; });
 
 // ---------- toggles ----------
-const state = { cut: true, ceil: true, mezz: true, furn: true, lbl: true };
+const state = { cut: true, ceil: true, mezz: true, furn: true };
 for (const k of Object.keys(state)) {
   const el = document.getElementById('t-' + k);
   el.addEventListener('change', () => { state[k] = el.checked; });
@@ -1220,12 +1582,16 @@ const pl = { x: 0, z: 0, feet: 0, vy: 0 };
 let walking = false, yaw = 0, pitch = 0;
 
 function probe(x, z, feet) {
-  let floor = 0, blocked = false;
+  // the ground itself: level 0, or lower in Meeting room 1. On foot the step is easy; the knee scooter
+  // (which tolerates 0.1 m, enough for the ramp) is stopped by it in both directions.
+  const base = baseFloor(x, z);
+  let floor = base, blocked = base > feet + Math.max(stepUp(), 0.1);
   for (const s of SURF) {
     if (!active(s.grp) || !s.test(x, z)) continue;
     if (s.top <= feet + stepUp()) floor = Math.max(floor, s.top);
     else if (s.bottom < feet + HEAD) blocked = true;
   }
+  if (SC.riding && floor < feet - 0.1) blocked = true;   // no riding off a step or down the stair
   return { floor, blocked };
 }
 function pushOut(x, z, feet) {
@@ -1259,13 +1625,13 @@ function tryMove(dx, dz) {
 }
 
 const SPOT_DEF = {
-  entrance: { at: [0, -1.0], look: [0, -8], feet: 0, pitch: 0.12 },
+  entrance: { at: [0, PV - 0.9], look: [0, -8], feet: 0, pitch: 0.06 },
   atrium: { at: [0, -3.6], look: [0, -8], feet: 0, pitch: 0.32 },
-  stair: { at: [-1.0, -11.2], look: [-1.3, -14.5], feet: 0, pitch: 0.1 },
+  stair: { at: [0.2, -10.6], look: NT([-0.5, -15.5]), feet: 0, pitch: 0.1 },
   meeting1: { at: onR(12.6, 3.4), look: onR(18.5, 3.0), feet: 0, pitch: -0.05 },
   mezz: { at: [-2.0, -2.6], look: [2.5, -9], feet: Y_MEZZ, pitch: -0.08 },
-  annemie: { at: [-3.35, -10.0], look: [-5.6, -11.4], feet: Y_MEZZ, pitch: -0.12 },
-  office: { at: [1.3, -10.0], look: onR(18.5, 3.2), feet: Y_MEZZ, pitch: -0.05 },
+  annemie: { at: [-1.95, -11.0], look: [-5.2, -10.2], feet: Y_MEZZ, pitch: -0.12 },
+  office: { at: [SB_X1 + 0.8, -9.7], look: onR(18.5, 3.2), feet: Y_MEZZ, pitch: -0.05 },
 };
 function jump(name) {
   dismountScooter();
@@ -1330,13 +1696,13 @@ function clickTarget(clientX, clientY) {
   ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   // cheap test first, so hovering does not raycast the whole building on every mouse move
-  if (!PHOTOS.some(ph => ray.intersectObject(ph.screen, false).length) && !ray.intersectObject(scooter.g, true).length) return null;
+  if (!ray.intersectObjects([...SHOTS.keys()], false).length && !ray.intersectObject(scooter.g, true).length) return null;
   for (const h of ray.intersectObject(root, true)) {
     if (!h.object.isMesh || !shown(h.object)) continue;
     const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
     if (mats.every(m => m.transparent || !m.visible)) continue;
-    const ph = PHOTOS.find(p => p.screen === h.object);
-    if (ph) return { photo: ph };
+    const shot = SHOTS.get(h.object);   // a photo screen opens only from its front, not from its back or edges
+    if (shot) return shot.face === null || (h.face && h.face.materialIndex === shot.face) ? { photo: shot.photo } : null;
     if (inScooter(h.object)) return { scooter: true };
     return null;
   }
@@ -1407,7 +1773,6 @@ function dismountScooter() {
   SC.riding = false; SC.note = 0;
   SC.x = pl.x - Math.sin(yaw) * 0.12; SC.z = pl.z - Math.cos(yaw) * 0.12; SC.yaw = yaw; SC.y = pl.feet;
   placeScooter();
-  scooterLabel.pos.copy(P(SC.x, SC.y + 1.25, SC.z));
   const [nx, nz] = pushOut(pl.x + Math.cos(yaw) * 0.6, pl.z - Math.sin(yaw) * 0.6, pl.feet);   // step off to the right
   if (!probe(nx, nz, pl.feet).blocked) { pl.x = nx; pl.z = nz; }
   pitch = Math.max(pitch, -0.2);
@@ -1419,7 +1784,6 @@ function updateHints() {
   document.getElementById('hint-ride-keys').hidden = coarse || !SC.riding;
   document.getElementById('hint-ride-touch').hidden = !coarse || !SC.riding;
 }
-const scooterLabel = labels.find(l => l.el.textContent.startsWith('Carl'));
 function rideUpdate(dt) {
   let f = 0, turn = 0;
   if (keys.KeyW || keys.ArrowUp) f++;
@@ -1470,9 +1834,9 @@ function finishWalkFrame(dt) {
   camera.position.set(pl.x - CX, pl.feet + EYE, pl.z - CZ);
   camera.rotation.set(pitch, yaw, 0);
 
-  const [bx0, bz0, bx1, bz1] = STAIR_BOX;
-  const onStair = pl.x > bx0 && pl.x < bx1 && pl.z > bz0 && pl.z < bz1 && pl.feet > 0.1 && pl.feet < Y_MEZZ - 0.1;
-  const where = onStair ? 'Red staircase' : pl.feet > 2 ? 'Mezzanine · +4.2 m' : 'Ground floor';
+  const [bx0, bz0, bx1, bz1] = STAIR_BOX, [nx, nz] = NI([pl.x, pl.z]);
+  const onStair = nx > bx0 && nx < bx1 && nz > bz0 && nz < bz1 && pl.feet > 0.1 && pl.feet < Y_MEZZ - 0.1;
+  const where = onStair ? 'Red staircase' : pl.feet > 2 ? `Mezzanine · +${Y_MEZZ} m` : 'Ground floor';
   const text = SC.note > 0 ? "Knee scooters don't do stairs" : SC.riding ? where + " · on Carl's knee scooter" : where;
   if (lvl.textContent !== text) lvl.textContent = text;
 }
@@ -1521,7 +1885,6 @@ new ResizeObserver(resize).observe(app); resize();
 goTo('overview', true);
 
 const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-const v = new THREE.Vector3();
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
@@ -1546,17 +1909,10 @@ function frame(now) {
   G.mezz.visible = state.mezz;
   G.furn.visible = state.furn;
 
-  const W = app.clientWidth, Hh = app.clientHeight;
-  for (const l of labels) {
-    const show = state.lbl && G[l.grp].visible && (!walking || l.pos.distanceTo(camera.position) < 16) && !(l === scooterLabel && SC.riding);
-    if (!show) { l.el.hidden = true; continue; }
-    v.copy(l.pos).project(camera);
-    if (v.z > 1 || v.z < -1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) { l.el.hidden = true; continue; }
-    l.el.hidden = false;
-    l.el.style.transform = `translate(${(v.x * 0.5 + 0.5) * W}px, ${(-v.y * 0.5 + 0.5) * Hh}px) translate(-50%, calc(-100% - 6px))`;
-  }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 </script>
+
+</body></html>
