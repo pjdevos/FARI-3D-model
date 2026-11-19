@@ -27,6 +27,9 @@ Published with GitHub Pages it works as is.
   screen, a stick. Take the red stair to the first floor.
 - Click a photo on a screen to see it large with its caption. Click Carl's knee scooter (or press `E` next to it)
   to ride it. It does not do stairs.
+- Just inside the entrance, the house robot (a HighTorque Mini Pi+) waits to greet you: it follows you with its head,
+  waves with its right arm when you come close and with both arms when you click it, modelled on videos of the real one. Its model is
+  `assets/models/mini-pi-plus.glb`: built from the robot's URDF, simplified to about 71,000 triangles and meshopt-compressed (300 KB).
 
 ## Photos on the screens
 

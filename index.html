@@ -177,8 +177,8 @@
     <button data-mode="walk" aria-pressed="false">Walk</button>
   </div>
   <div class="body">
-    <p class="desc" id="desc-orbit">A simple massing model built from the floor plan and labelled photos. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan. Switch to Walk to move through it at eye height. Click a photo on a screen to see it large, or click Carl&rsquo;s knee scooter to ride it.</p>
-    <p class="desc" id="desc-walk" hidden>You walk at eye height (1.6&nbsp;m) and bump into walls, piers and furniture. Take the red stair to reach the mezzanine. Meeting room 1 is one step down. Click a photo to see it large; click Carl&rsquo;s knee scooter, or press <kbd>E</kbd> next to it, to ride.</p>
+    <p class="desc" id="desc-orbit">A simple massing model built from the floor plan and labelled photos. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan. Switch to Walk to move through it at eye height. Click a photo on a screen to see it large, or click Carl&rsquo;s knee scooter to ride it. Click the robot by the door to make it wave.</p>
+    <p class="desc" id="desc-walk" hidden>You walk at eye height (1.6&nbsp;m) and bump into walls, piers and furniture. Take the red stair to reach the mezzanine. Meeting room 1 is one step down. Click a photo to see it large; click Carl&rsquo;s knee scooter, or press <kbd>E</kbd> next to it, to ride. The robot by the door waves when you come close; click it for a bigger wave.</p>
     <div id="group-views">
       <div class="group-title">Views</div>
       <div class="views" id="views">
@@ -223,6 +223,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 // ---------- basics ----------
 const CX = 1.0, CZ = -9.5;            // centre of the plan (metres)
@@ -1515,6 +1517,81 @@ function placeScooter() {
 }
 placeScooter();
 
+// ---------- the house robot: a HighTorque Mini Pi+ (0.68 m), greeting you just inside the entrance ----------
+// The model comes from the robot's URDF, simplified and meshopt-compressed in assets/models. Its front is local +x,
+// and every link is still a separate mesh, baked at the zero pose. On loading, the arm and head links are hung from
+// pivots at their URDF joints, so they can turn. The robot follows you with its head, waves with its right arm when
+// you come close, and waves with both arms when you click it, after two videos of the real one.
+const ROBOT = { x: -0.7, z: -3.2, yaw: FACE(0.25, 1) - Math.PI / 2, g: null, J: {}, wave: null, armed: true, hy: 0, hp: 0 };
+colSeg([ROBOT.x, ROBOT.z], [ROBOT.x, ROBOT.z], 0.45, 0, 0.7, 'furn');
+{
+  // URDF joints (all with rpy 0): parent joint, offset from it, rotation axis. URDF is Z-up and x-forward.
+  const URDF_J = {
+    r_shoulder_pitch: [null, [0, -0.1069, 0.11671], [0, 1, 0]], r_shoulder_roll: ['r_shoulder_pitch', [0, -0.038, 0.00029], [1, 0, 0]],
+    r_upper_arm: ['r_shoulder_roll', [0, 0, -0.0724], [0, 0, 1]], r_elbow: ['r_upper_arm', [0, 0, -0.038], [0, 1, 0]],
+    r_wrist: ['r_elbow', [0, 0, -0.0724], [0, 0, 1]],
+    l_shoulder_pitch: [null, [0, 0.1069, 0.11671], [0, 1, 0]], l_shoulder_roll: ['l_shoulder_pitch', [0, 0.038, 0.00029], [1, 0, 0]],
+    l_upper_arm: ['l_shoulder_roll', [0, 0, -0.07269], [0, 0, 1]], l_elbow: ['l_upper_arm', [0, 0, -0.03771], [0, 1, 0]],
+    l_wrist: ['l_elbow', [0, 0, -0.07269], [0, 0, 1]],
+    head_yaw: [null, [0, 0.00025, 0.1981], [0, 0, 1]], head_pitch: ['head_yaw', [0, 0, 0.0255], [0, 1, 0]],
+  };
+  const FOOT = 0.3762;                                    // the model was lifted this much to stand its feet on y = 0
+  const U = ([x, y, z]) => new THREE.Vector3(x, z, -y);   // URDF frame -> model frame (Y-up)
+  new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load('assets/models/mini-pi-plus.glb', gltf => {
+    const r = gltf.scene;
+    for (const [name, [parent, off, axis]] of Object.entries(URDF_J)) {
+      const pv = new THREE.Group(); pv.position.copy(U(off)); if (!parent) pv.position.y += FOOT;
+      pv.userData.axis = U(axis).normalize(); (parent ? ROBOT.J[parent] : r).add(pv); ROBOT.J[name] = pv;
+    }
+    r.updateMatrixWorld(true);
+    const meshes = []; r.traverse(o => { if (o.isMesh) meshes.push(o); });
+    // the real robot wears a dark shell: the CAD's light parts become grey, its dark parts darker grey.
+    // The model has no normals, so it is flat-shaded, as GLTFLoader does on its own.
+    const shell = std({ color: 0x3b3e46, roughness: 0.55, flatShading: true }), joint = std({ color: 0x5a5e67, roughness: 0.5, flatShading: true });
+    for (const m of meshes) {
+      m.castShadow = true; m.receiveShadow = true;
+      m.material = m.material.color.r < 0.5 ? shell : joint;
+      const link = m.name.replace(/_?STL$/i, '').replace(/_link$/, '');
+      if (ROBOT.J[link]) ROBOT.J[link].attach(m);
+    }
+    // the blue status light on its belly and the small blue logo higher on the chest
+    const led = new THREE.MeshBasicMaterial({ color: 0x2a5cff });
+    for (const [w, h, y] of [[0.03, 0.05, FOOT + 0.03], [0.016, 0.012, FOOT + 0.15]]) {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), led); p.rotation.y = Math.PI / 2; p.position.set(0.0845, y, 0); r.add(p);
+    }
+    r.position.set(ROBOT.x, 0, ROBOT.z); r.rotation.y = ROBOT.yaw;
+    G.furn.add(r); ROBOT.g = r;
+  }, undefined, e => console.warn('robot model not loaded', e));
+}
+const setJoint = (name, q) => { const j = ROBOT.J[name]; if (j) j.quaternion.setFromAxisAngle(j.userData.axis, q); };
+function robotWave(both) { if (ROBOT.g && !ROBOT.wave) ROBOT.wave = { t: 0, both, P: both ? 1.2 : 2.0, n: 3 }; }
+const _rv = new THREE.Vector3();
+function robotUpdate(dt) {
+  const R = ROBOT; if (!R.g || !R.g.visible || !G.furn.visible) return;
+  // head: follow the camera (you) when it is near and in front, else look ahead
+  _rv.copy(camera.position); R.g.worldToLocal(_rv);
+  const flat = Math.hypot(_rv.x, _rv.z), yaw = Math.atan2(-_rv.z, _rv.x);
+  const near = flat < 7 && Math.abs(yaw) < 1.9;
+  const ty = near ? THREE.MathUtils.clamp(yaw, -1.2, 1.2) : 0;
+  const tp = near ? THREE.MathUtils.clamp(-Math.atan2(_rv.y - 0.62, flat), -0.34, 0.4) : 0;
+  const k = 1 - Math.exp(-dt * 4); R.hy += (ty - R.hy) * k; R.hp += (tp - R.hp) * k;
+  setJoint('head_yaw', R.hy); setJoint('head_pitch', R.hp);
+  // wave once when you come within 3.5 m in front of it; again only after you have walked away
+  if (flat > 6) R.armed = true;
+  else if (R.armed && flat < 3.5 && Math.abs(yaw) < 1.4 && !reduceMotion) { R.armed = false; robotWave(false); }
+  if (!R.wave) return;
+  const w = R.wave, UP = 0.8, total = UP * 2 + w.P * w.n; w.t += dt;
+  const ss = x => { x = THREE.MathUtils.clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const b = ss(w.t / UP) * (1 - ss((w.t - total + UP) / UP));   // raise the arm, wave, lower it
+  const tau = THREE.MathUtils.clamp(w.t - UP, 0, w.P * w.n);
+  const elbow = 0.95 - 0.55 * Math.cos(2 * Math.PI * tau / w.P);    // forearm swings from out to the side to straight up
+  for (const [s, on] of [['r', true], ['l', w.both]]) {
+    const sg = s === 'r' ? 1 : -1, f = on ? b : 0;
+    setJoint(s + '_shoulder_roll', -sg * 1.45 * f); setJoint(s + '_upper_arm', sg * Math.PI / 2 * f); setJoint(s + '_elbow', elbow * f);
+  }
+  if (w.t >= total) R.wave = null;
+}
+
 // ---------- environment & lights ----------
 // the ground disc lies just under floor level, so it needs a hole where Meeting room 1 is lower
 const groundShape = new THREE.Shape(); groundShape.absarc(0, 0, 70, 0, Math.PI * 2, false);
@@ -1687,16 +1764,18 @@ lightbox.addEventListener('click', e => { if (e.target === lightbox) closePhoto(
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 const shown = o => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
-// what can be clicked: a photo screen (opens the photo) or the knee scooter (get on or off).
+// what can be clicked: a photo screen (opens the photo), the knee scooter (get on or off) or the robot (it waves).
 // Returns null when nothing clickable is under the pointer or something solid is in front of it.
 const inScooter = o => { for (; o; o = o.parent) if (o === scooter.g) return true; return false; };
+const inRobot = o => { for (; o; o = o.parent) if (o === ROBOT.g) return true; return false; };
 function clickTarget(clientX, clientY) {
   if (!G.furn.visible) return null;
   const r = canvas.getBoundingClientRect();
   ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   // cheap test first, so hovering does not raycast the whole building on every mouse move
-  if (!ray.intersectObjects([...SHOTS.keys()], false).length && !ray.intersectObject(scooter.g, true).length) return null;
+  if (!ray.intersectObjects([...SHOTS.keys()], false).length && !ray.intersectObject(scooter.g, true).length
+      && !(ROBOT.g && ray.intersectObject(ROBOT.g, true).length)) return null;
   for (const h of ray.intersectObject(root, true)) {
     if (!h.object.isMesh || !shown(h.object)) continue;
     const mats = Array.isArray(h.object.material) ? h.object.material : [h.object.material];
@@ -1704,6 +1783,7 @@ function clickTarget(clientX, clientY) {
     const shot = SHOTS.get(h.object);   // a photo screen opens only from its front, not from its back or edges
     if (shot) return shot.face === null || (h.face && h.face.materialIndex === shot.face) ? { photo: shot.photo } : null;
     if (inScooter(h.object)) return { scooter: true };
+    if (inRobot(h.object)) return { robot: true };
     return null;
   }
   return null;
@@ -1717,6 +1797,7 @@ canvas.addEventListener('pointerup', e => {
   const hit = moved < 6 && quick ? clickTarget(e.clientX, e.clientY) : null;
   if (!hit) return;
   if (hit.photo) openPhoto(hit.photo);
+  else if (hit.robot) robotWave(true);
   else if (SC.riding) dismountScooter();
   else mountScooter();
 });
@@ -1908,6 +1989,7 @@ function frame(now) {
   G.ceil.visible = state.ceil && !(cut && cy > Y_TOP);
   G.mezz.visible = state.mezz;
   G.furn.visible = state.furn;
+  robotUpdate(dt);
 
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
